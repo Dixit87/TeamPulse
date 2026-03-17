@@ -1,0 +1,332 @@
+﻿@model IEnumerable<TeamPulse.Models.TblLoan>
+@{
+    Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    ViewData["Title"] = "My Loans & Advances";
+
+    System.Globalization.CultureInfo indianCulture = new System.Globalization.CultureInfo("hi-IN");
+
+    decimal totalLoan = ViewBag.TotalLoanTaken ?? 0;
+    decimal totalBalance = ViewBag.TotalBalanceLeft ?? 0;
+    decimal currentEmi = ViewBag.CurrentMonthlyEmi ?? 0;
+
+    // Kitna paisa chuka diya gaya hai
+    decimal totalPaid = totalLoan - totalBalance;
+    double overallProgress = totalLoan > 0 ? (double)(totalPaid / totalLoan) * 100 : 0;
+}
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
+
+<style>
+    :root {
+        --dash-primary: #4361ee;
+        --dash-success: #2ec4b6;
+        --dash-warning: #ff9f1c;
+        --dash-danger: #e71d36;
+        --bg-soft: #f8f9fc;
+    }
+
+    body {
+        background-color: var(--bg-soft);
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* Financial Cards */
+    .finance-card {
+        background: #fff;
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        padding: 24px;
+        transition: transform 0.2s ease;
+        position: relative;
+        overflow: hidden;
+        height: 100%;
+    }
+
+        .finance-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .finance-icon {
+        position: absolute;
+        right: -10px;
+        bottom: -15px;
+        font-size: 5rem;
+        opacity: 0.05;
+        transform: rotate(-10deg);
+    }
+
+    .progress-custom {
+        height: 10px;
+        background-color: #e2e8f0;
+        border-radius: 10px;
+        margin-top: 15px;
+        margin-bottom: 5px;
+    }
+
+    /* Table Styling */
+    .table-custom {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        padding: 20px;
+    }
+
+        .table-custom thead th {
+            background-color: #f8f9fc;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .table-custom tbody td {
+            vertical-align: middle;
+            color: #334155;
+            font-weight: 500;
+            border-bottom: 1px solid #f1f5f9;
+            padding: 15px 10px;
+        }
+
+    .badge-status {
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    .page-item.active .page-link {
+        background-color: var(--dash-primary);
+        border-color: var(--dash-primary);
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h2 class="font-weight-bold text-dark mb-1">My Loans & Advances</h2>
+            <p class="text-muted mb-0">Track your company loans, EMIs, and outstanding balances.</p>
+        </div>
+        <div class="col-md-4 text-md-right mt-3 mt-md-0">
+            <button class="btn btn-primary font-weight-bold shadow-sm rounded-pill px-4" data-toggle="modal" data-target="#requestLoanModal">
+                <i class="fas fa-hand-holding-usd mr-2"></i> Request New Loan
+            </button>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-lg-4 col-md-6 mb-3 mb-lg-0">
+            <div class="finance-card border-top" style="border-top: 4px solid var(--dash-primary) !important;">
+                <i class="fas fa-money-check-alt finance-icon text-primary"></i>
+                <h6 class="text-uppercase text-muted font-weight-bold mb-1">Total Loan Sanctioned</h6>
+                <h2 class="font-weight-bold text-dark mb-0">@totalLoan.ToString("C", indianCulture)</h2>
+
+                <div class="progress progress-custom">
+                    <div class="progress-bar bg-primary" style="width: @overallProgress%;"></div>
+                </div>
+                <div class="d-flex justify-content-between small font-weight-bold mt-1">
+                    <span class="text-success">Paid: @totalPaid.ToString("C", indianCulture)</span>
+                    <span class="text-muted">@Math.Round(overallProgress, 1)% Repaid</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-3 mb-lg-0">
+            <div class="finance-card border-top" style="border-top: 4px solid var(--dash-danger) !important;">
+                <i class="fas fa-file-invoice-dollar finance-icon text-danger"></i>
+                <h6 class="text-uppercase text-muted font-weight-bold mb-1">Outstanding Balance</h6>
+                <h2 class="font-weight-bold text-danger mb-0">@totalBalance.ToString("C", indianCulture)</h2>
+                <small class="text-muted font-weight-bold mt-2 d-block"><i class="fas fa-exclamation-circle text-warning mr-1"></i> Amount left to be paid</small>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-12">
+            <div class="finance-card border-top bg-light" style="border-top: 4px solid var(--dash-warning) !important;">
+                <i class="fas fa-calendar-alt finance-icon text-warning"></i>
+                <h6 class="text-uppercase text-muted font-weight-bold mb-1">Active Monthly EMI</h6>
+                <h2 class="font-weight-bold text-dark mb-0">@currentEmi.ToString("C", indianCulture)</h2>
+                <small class="text-muted font-weight-bold mt-2 d-block"><i class="fas fa-sync-alt text-primary fa-spin mr-1"></i> Auto-deducted from salary</small>
+            </div>
+        </div>
+    </div>
+
+    <h5 class="font-weight-bold mb-3 mt-4"><i class="fas fa-history text-secondary mr-2"></i>Loan Request History</h5>
+
+    <div class="table-custom">
+        <div class="table-responsive">
+            <table id="loanTable" class="table table-hover w-100 mb-0">
+                <thead>
+                    <tr>
+                        <th class="pl-3">Request/Sanction Date</th>
+                        <th>Loan Amount</th>
+                        <th>EMI & Tenure</th>
+                        <th>Balance Left</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var loan in Model)
+                        {
+                            decimal lAmount = loan.LoanAmount;
+                            decimal lBalance = loan.BalanceAmount ?? 0;
+                            double progress = lAmount > 0 ? (double)((lAmount - lBalance) / lAmount) * 100 : 0;
+
+                            <tr>
+                                <td class="pl-3">
+                                    <div class="font-weight-bold text-dark">
+                                        <i class="far fa-calendar-check text-primary mr-1"></i>
+                                        @(loan.SanctionDate?.ToString("dd MMM yyyy") ?? "Pending Review")
+                                    </div>
+                                    <small class="text-muted">Ref ID: #LN-@loan.LoanId.ToString("D4")</small>
+                                </td>
+
+                                <td class="font-weight-bold text-dark" style="font-size: 1.1rem;">
+                                    @loan.LoanAmount.ToString("C", indianCulture)
+                                </td>
+
+                                <td>
+                                    <span class="text-primary font-weight-bold">@loan.Emiamount.ToString("C", indianCulture)</span> <span class="text-muted small">/ mo</span><br />
+                                    <small class="badge badge-light border mt-1"><i class="far fa-clock mr-1"></i> @loan.Months Months</small>
+                                </td>
+
+                                <td>
+                                    @if (loan.Status == "Active" || loan.Status == "Settled")
+                                    {
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-grow-1 mr-2">
+                                                <div class="progress" style="height: 6px; border-radius: 10px;">
+                                                    <div class="progress-bar @(lBalance == 0 ? "bg-success" : "bg-warning")" style="width: @progress%;"></div>
+                                                </div>
+                                            </div>
+                                            <span class="font-weight-bold @(lBalance == 0 ? "text-success" : "text-danger")" style="font-size: 0.9rem;">
+                                                @lBalance.ToString("C", indianCulture)
+                                            </span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">--</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    <span class="text-truncate d-inline-block text-muted" style="max-width: 150px;" title="@loan.Reason">
+                                        @(string.IsNullOrEmpty(loan.Reason) ? "Personal Loan" : loan.Reason)
+                                    </span>
+                                </td>
+
+                                <td>
+                                    @if (loan.Status == "Settled")
+                                    {
+                                        <span class="badge badge-status bg-success text-white"><i class="fas fa-check-double mr-1"></i> Settled</span>
+                                    }
+                                    else if (loan.Status == "Active")
+                                    {
+                                        <span class="badge badge-status bg-info text-white"><i class="fas fa-sync-alt fa-spin mr-1"></i> Active</span>
+                                    }
+                                    else if (loan.Status == "Rejected")
+                                    {
+                                        <span class="badge badge-status bg-danger text-white"><i class="fas fa-times-circle mr-1"></i> Rejected</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-status bg-warning text-white"><i class="fas fa-hourglass-half mr-1"></i> Pending</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+
+            @if (Model == null || !Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-money-check-alt fa-3x text-muted mb-3 opacity-25"></i>
+                    <h5 class="font-weight-bold text-dark">No Loan Records Found</h5>
+                    <p class="text-muted mb-0">You have not requested any loans or salary advances yet.</p>
+                </div>
+            }
+        </div>
+    </div>
+
+</div>
+<div class="modal fade" id="requestLoanModal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="font-weight-bold"><i class="fas fa-hand-holding-usd text-primary mr-2"></i>Request Advance/Loan</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <form asp-action="ApplyLoan" asp-controller="EmployeePortal" method="post">
+                <div class="modal-body">
+                    <div class="alert bg-light border-0 small text-muted">
+                        <i class="fas fa-info-circle text-primary mr-1"></i> Requested amount will be deducted from your monthly salary as EMI.
+                    </div>
+
+                    <div class="row">
+                        <div class="col-6 form-group">
+                            <label class="font-weight-bold small text-muted">Amount Required (₹)</label>
+                            <input type="number" name="LoanAmount" id="empAmt" class="form-control form-control-lg" style="border-radius: 10px;" required onkeyup="calcEmpEMI()" />
+                        </div>
+                        <div class="col-6 form-group">
+                            <label class="font-weight-bold small text-muted">Tenure (Months)</label>
+                            <input type="number" name="Months" id="empMon" class="form-control form-control-lg" style="border-radius: 10px;" required onkeyup="calcEmpEMI()" />
+                        </div>
+                    </div>
+
+                    <div class="bg-light p-3 rounded text-center mb-3">
+                        <small class="text-muted">Estimated Monthly EMI</small>
+                        <h3 class="text-primary font-weight-bold mb-0" id="empEmiDisplay">₹ 0.00</h3>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="font-weight-bold small text-muted">Reason for Request</label>
+                        <textarea name="Reason" class="form-control" rows="2" style="border-radius: 10px;" placeholder="Briefly explain why you need this advance..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="submit" class="btn btn-primary btn-block btn-lg font-weight-bold shadow-sm" style="border-radius: 10px;">Submit Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function calcEmpEMI() {
+        var amt = parseFloat(document.getElementById('empAmt').value) || 0;
+        var mon = parseFloat(document.getElementById('empMon').value) || 1;
+        var emi = amt / mon;
+        document.getElementById('empEmiDisplay').innerText = "₹ " + emi.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+</script>
+
+@section Scripts {
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            if ($('#loanTable tbody tr').length > 0 && !$('#loanTable tbody tr td').hasClass('dataTables_empty')) {
+                $('#loanTable').DataTable({
+                    "pageLength": 10,
+                    "lengthChange": false,
+                    "ordering": false,
+                    "info": true,
+                    "language": {
+                        "search": "",
+                        "searchPlaceholder": "Search loans..."
+                    }
+                });
+                $('.dataTables_filter input').addClass('form-control form-control-sm').css({'border-radius':'8px', 'display':'inline-block', 'width':'auto'});
+            }
+        });
+    </script>
+}

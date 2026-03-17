@@ -1,0 +1,213 @@
+﻿@model TeamPulse.Models.TblUser
+@{
+    ViewData["Title"] = "Provision New User";
+}
+
+<style>
+    :root {
+        --primary-indigo: #4f46e5;
+        --bg-slate: #f8fafc;
+    }
+
+    /* Page Container Styling */
+    .creation-wrapper {
+        padding: 3rem 0;
+        background-color: var(--bg-slate);
+        min-height: 90vh;
+    }
+
+    /* Modern Card UI */
+    .auth-card {
+        border: none;
+        border-radius: 24px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+        background: #fff;
+        overflow: hidden;
+    }
+
+    .auth-card-header {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        padding: 2.5rem;
+        text-align: center;
+        color: white;
+    }
+
+    .auth-icon-circle {
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 1.5rem;
+        backdrop-filter: blur(5px);
+    }
+
+    /* Form Modernization */
+    .form-body {
+        padding: 2.5rem;
+    }
+
+    .form-group label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: 8px;
+    }
+
+    .input-group-modern {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+        .input-group-modern i {
+            position: absolute;
+            left: 15px;
+            color: #94a3b8;
+            z-index: 10;
+        }
+
+    .form-control-modern {
+        border-radius: 12px;
+        padding: 0.75rem 1rem 0.75rem 45px; /* Space for icon */
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        font-weight: 500;
+        transition: 0.3s;
+    }
+
+        .form-control-modern:focus {
+            background: #fff;
+            border-color: var(--primary-indigo);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        }
+
+    /* Custom Switch Styling */
+    .status-box {
+        background: #f1f5f9;
+        padding: 15px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .btn-provision {
+        background: var(--primary-indigo);
+        border: none;
+        border-radius: 12px;
+        padding: 12px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        transition: 0.3s;
+    }
+
+        .btn-provision:hover {
+            background: #4338ca;
+            transform: translateY(-2px);
+        }
+</style>
+
+<div class="creation-wrapper">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 offset-lg-3 col-md-8 offset-md-2">
+
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-custom bg-white border-left border-danger shadow-sm alert-dismissible fade show mb-4">
+                        <i class="fas fa-exclamation-triangle text-danger mr-2"></i> @TempData["Error"]
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    </div>
+                }
+
+                <div class="card auth-card">
+                    <div class="auth-card-header">
+                        <div class="auth-icon-circle">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <h4 class="font-weight-bold mb-1">User Provisioning</h4>
+                        <p class="mb-0 opacity-75 small">Grant system access to a new team member</p>
+                    </div>
+
+                    <form asp-action="Create" method="post">
+                        <div class="form-body">
+                            <div class="form-group mb-4">
+                                <label>Legal Full Name</label>
+                                <div class="input-group-modern">
+                                    <i class="fas fa-signature"></i>
+                                    <input asp-for="FullName" class="form-control form-control-modern" placeholder="e.g. John Doe" required />
+                                </div>
+                                <span asp-validation-for="FullName" class="text-danger small"></span>
+                            </div>
+
+                            <div class="form-group mb-4">
+                                <label>Login Identifier (Email)</label>
+                                <div class="input-group-modern">
+                                    <i class="fas fa-envelope"></i>
+                                    <input asp-for="Email" type="email" class="form-control form-control-modern" placeholder="name@teampulse.com" required />
+                                </div>
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+
+                            <div class="form-group mb-4">
+                                <label>Initial Password</label>
+                                <div class="input-group-modern">
+                                    <i class="fas fa-key"></i>
+                                    <input asp-for="Password" type="password" class="form-control form-control-modern" placeholder="••••••••" required />
+                                </div>
+                                <small class="text-muted mt-1 d-block">Min. 8 characters with symbols recommended.</small>
+                            </div>
+
+                            <div class="form-group mb-4">
+                                <label>Authorization Role</label>
+                                <div class="input-group-modern">
+                                    <i class="fas fa-user-tag"></i>
+                                    <select asp-for="RoleID" class="form-control form-control-modern custom-select" asp-items="ViewBag.Roles" required style="padding-left: 45px;">
+                                        <option value="">-- Assign Access Level --</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="status-box mb-4">
+                                <div>
+                                    <span class="font-weight-bold d-block text-dark small text-uppercase">Account Status</span>
+                                    <small class="text-muted">Allow immediate login</small>
+                                </div>
+                                <div class="custom-control custom-switch custom-switch-on-success">
+                                    <input type="checkbox" class="custom-control-input" id="IsActiveSwitch" asp-for="IsActive" checked>
+                                    <label class="custom-control-label" for="IsActiveSwitch"></label>
+                                </div>
+                            </div>
+
+                            <div class="pt-2">
+                                <button type="submit" class="btn btn-primary btn-block btn-provision shadow-lg">
+                                    <i class="fas fa-check-circle mr-2"></i> Create System Account
+                                </button>
+                                <a asp-action="Index" class="btn btn-link btn-block text-muted small mt-2">
+                                    Return to User Management
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="text-center mt-4">
+                    <p class="small text-muted">&copy; 2026 TeamPulse Security Module</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

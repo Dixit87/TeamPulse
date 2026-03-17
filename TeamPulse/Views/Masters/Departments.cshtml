@@ -1,0 +1,267 @@
+﻿@model IEnumerable<TeamPulse.ViewModels.DepartmentVM>
+@{
+    ViewData["Title"] = "Organizational Units";
+}
+
+<style>
+    :root {
+        --primary-soft: #f0f4ff;
+        --accent-color: #4f46e5;
+    }
+
+    /* Header Styling */
+    .content-header h1 {
+        font-weight: 800;
+        color: #1e293b;
+        letter-spacing: -0.5px;
+    }
+
+    /* Table Styling */
+    .dept-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+
+    .table thead th {
+        background-color: #f8fafc;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        color: #64748b;
+        border: none;
+        padding: 1.2rem;
+    }
+
+    .table td {
+        vertical-align: middle;
+        padding: 1.2rem;
+        border-color: #f1f5f9;
+    }
+
+    /* Status Badges */
+    .badge-pill-custom {
+        padding: 6px 14px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    /* Action Buttons */
+    .btn-action {
+        width: 35px;
+        height: 35px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        transition: 0.3s;
+    }
+
+    .btn-edit-soft {
+        background: #e0e7ff;
+        color: #4338ca;
+        border: none;
+    }
+
+        .btn-edit-soft:hover {
+            background: #4338ca;
+            color: #fff;
+        }
+
+    .btn-delete-soft {
+        background: #fee2e2;
+        color: #b91c1c;
+        border: none;
+    }
+
+        .btn-delete-soft:hover {
+            background: #b91c1c;
+            color: #fff;
+        }
+
+    /* Modal Styling */
+    .modal-content {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+    }
+
+    .modal-header {
+        border-bottom: 1px solid #f1f5f9;
+        padding: 1.5rem;
+    }
+
+    .modal-footer {
+        border-top: none;
+        padding: 1.5rem;
+    }
+
+    .form-control-modern {
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+    }
+
+        .form-control-modern:focus {
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+            border-color: var(--accent-color);
+        }
+</style>
+
+<div class="content-header py-4">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-1">Department Master</h1>
+                <p class="text-muted mb-0 small"><i class="fas fa-sitemap mr-1"></i> Manage your company's organizational structure</p>
+            </div>
+            <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm font-weight-bold" onclick="openModal(0, '', '')">
+                <i class="fas fa-plus-circle mr-1"></i> Create New Unit
+            </button>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-custom bg-white border-left border-success shadow-sm alert-dismissible fade show mb-4">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle text-success mr-3 fa-lg"></i>
+                    <span class="font-weight-bold">Success!</span> &nbsp; @TempData["Success"]
+                </div>
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
+        }
+
+        <div class="card dept-card border-0">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="pl-4">Identifier / Code</th>
+                                <th>Unit Name</th>
+                                <th class="text-center">Operational Status</th>
+                                <th class="text-right pr-4">Management</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td class="pl-4 align-middle">
+                                            <code class="px-2 py-1 bg-light rounded text-primary font-weight-bold">@item.Code</code>
+                                        </td>
+                                        <td class="align-middle">
+                                            <span class="font-weight-bold text-dark h6 mb-0">@item.DepartmentName</span>
+                                        </td>
+                                        <td class="text-center align-middle">
+                                            @if (item.IsActive)
+                                            {
+                                                <span class="badge badge-pill-custom bg-success-soft text-success">
+                                                    <i class="fas fa-dot-circle mr-1"></i> Active
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-pill-custom bg-danger-soft text-danger">
+                                                    <i class="fas fa-times-circle mr-1"></i> Inactive
+                                                </span>
+                                            }
+                                        </td>
+                                        <td class="text-right pr-4 align-middle">
+                                            <button class="btn-action btn-edit-soft mr-2"
+                                                    title="Edit Unit"
+                                                    onclick="openModal(@item.DepartmentID, '@item.DepartmentName', '@item.Code')">
+                                                <i class="fas fa-pen-nib"></i>
+                                            </button>
+
+                                            <a href="@Url.Action("DeleteDepartment", "Masters", new { id = item.DepartmentID })"
+                                               class="btn-action btn-delete-soft"
+                                               title="Remove Unit"
+                                               onclick="return confirm('Are you sure you want to remove this unit? This cannot be undone.');">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center py-5">
+                                        <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" style="width: 60px; opacity: 0.2;" />
+                                        <p class="text-muted mt-3">No departments found. Start by creating a new unit.</p>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="deptModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header bg-white">
+                <h5 class="modal-title font-weight-bold text-dark" id="modalTitle">
+                    <i class="fas fa-plus-circle text-primary mr-2"></i>Unit Configuration
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true" class="text-muted">&times;</span>
+                </button>
+            </div>
+
+            <form asp-action="SaveDepartment" asp-controller="Masters" method="post">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="DepartmentID" id="hdnId" value="0" />
+
+                    <div class="form-group mb-4">
+                        <label class="small font-weight-bold text-uppercase text-muted">Legal Unit Name</label>
+                        <input type="text" name="DepartmentName" id="txtName" class="form-control form-control-modern" required placeholder="e.g. Information Technology" />
+                    </div>
+
+                    <div class="form-group mb-2">
+                        <label class="small font-weight-bold text-uppercase text-muted">Internal Code</label>
+                        <input type="text" name="Code" id="txtCode" class="form-control form-control-modern" required placeholder="e.g. IT-01" />
+                        <small class="text-muted mt-1 d-block"><i class="fas fa-info-circle mr-1"></i> Used for employee ID generation & reports.</small>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light p-3">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">Save Configuration</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(id, name, code) {
+            $('#hdnId').val(id);
+            $('#txtName').val(name);
+            $('#txtCode').val(code);
+
+            if (id === 0) {
+                $('#modalTitle').html('<i class="fas fa-plus-circle text-primary mr-2"></i>Add New Unit');
+            } else {
+                $('#modalTitle').html('<i class="fas fa-edit text-primary mr-2"></i>Update Unit');
+            }
+
+            $('#deptModal').modal('show');
+        }
+    </script>
+}

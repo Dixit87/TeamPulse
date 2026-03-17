@@ -1,0 +1,298 @@
+﻿@model IEnumerable<TeamPulse.ViewModels.EmployeeVM>
+@{
+    ViewData["Title"] = "Talent Pool";
+}
+
+<style>
+    :root {
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --primary-soft: #f0f7ff;
+    }
+
+    /* Page Header Overhaul */
+    .people-header {
+        background: #fff;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 1.5rem 0;
+    }
+
+    .btn-add-staff {
+        border-radius: 12px;
+        font-weight: 600;
+        padding: 10px 24px;
+        transition: 0.3s;
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+    }
+
+        .btn-add-staff:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+        }
+
+    /* Modern Table Card */
+    .talent-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+
+    .table-talent thead th {
+        background: #f8fafc;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        letter-spacing: 0.05em;
+        color: #64748b;
+        border: none;
+        padding: 1.25rem 1rem;
+    }
+
+    .table-talent tbody tr {
+        transition: 0.2s;
+    }
+
+        .table-talent tbody tr:hover {
+            background-color: #f1f5f9;
+        }
+
+    /* Profile UI */
+    .emp-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        object-fit: cover;
+        border: 2px solid #fff;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .emp-initials {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: var(--primary-soft);
+        color: #2563eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    /* Action Buttons */
+    .action-group .btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 4px;
+        border: none;
+        transition: 0.2s;
+    }
+
+    .btn-view {
+        background: #e0f2fe;
+        color: #0369a1;
+    }
+
+    .btn-edit {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .btn-off {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .btn-view:hover {
+        background: #0369a1;
+        color: #fff;
+    }
+
+    /* Search Bar */
+    .search-wrapper {
+        position: relative;
+        width: 320px;
+    }
+
+        .search-wrapper input {
+            border-radius: 12px;
+            padding-left: 35px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .search-wrapper i {
+            position: absolute;
+            left: 12px;
+            top: 12px;
+            color: #94a3b8;
+        }
+
+    /* Status Pill */
+    .status-pill {
+        padding: 4px 12px;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .dot {
+        height: 6px;
+        width: 6px;
+        border-radius: 50%;
+        margin-right: 6px;
+    }
+</style>
+
+<div class="people-header">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="font-weight-bold mb-1 text-dark">Staff Directory</h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb bg-transparent p-0 m-0 small">
+                        <li class="breadcrumb-item"><a href="#">Home</a></li>
+                        <li class="breadcrumb-item active">People</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="d-flex gap-3 align-items-center">
+                <div class="search-wrapper mr-3">
+                    <i class="fas fa-search small"></i>
+                    <input type="text" id="myInput" onkeyup="searchTable()" class="form-control" placeholder="Search by name, role...">
+                </div>
+                <a href="@Url.Action("Create")" class="btn btn-primary btn-add-staff">
+                    <i class="fas fa-plus mr-2"></i> Add Talent
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content mt-4">
+    <div class="container-fluid">
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-custom bg-white border-left border-success shadow-sm alert-dismissible fade show mb-4">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle text-success mr-3 fa-lg"></i>
+                    <div>
+                        <strong>Action Successful</strong><br />
+                        <span class="small">@TempData["Success"]</span>
+                    </div>
+                </div>
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
+        }
+
+        <div class="card talent-card">
+            <div class="card-body p-0">
+                <table class="table table-talent mb-0 align-middle" id="empTable">
+                    <thead>
+                        <tr>
+                            <th class="pl-4">Talent</th>
+                            <th>Role & Unit</th>
+                            <th>Contact & Shift</th>
+                            <th>Tenure</th>
+                            <th>Engagement</th>
+                            <th class="text-right pr-4">Management</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="pl-4">
+                                        <div class="d-flex align-items-center">
+                                            @if (!string.IsNullOrEmpty(item.ExistingPhotoPath))
+                                            {
+                                                <img src="~/uploads/employees/@item.ExistingPhotoPath" class="emp-avatar mr-3" alt="Profile">
+                                            }
+                                            else
+                                            {
+                                                <div class="emp-initials mr-3">@(item.FirstName?[0])</div>
+                                            }
+                                            <div>
+                                                <div class="font-weight-bold text-dark mb-0">@item.FirstName @item.LastName</div>
+                                                <code class="small text-muted" style="font-size: 10px;">ID: #EMP-@item.EmployeeID</code>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="font-weight-bold text-primary small">@item.DesignationName</div>
+                                        <div class="small text-muted">@item.DepartmentName</div>
+                                    </td>
+                                    <td>
+                                        <div class="small text-dark font-weight-bold">@item.MobileNumber</div>
+                                        <span class="badge badge-warning py-1 px-2" style="font-size: 10px;">
+                                            <i class="far fa-clock mr-1"></i> @item.ShiftName
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="small font-weight-bold">@item.DateOfJoining.ToString("dd MMM yyyy")</div>
+                                        @{
+                                            var expMonths = ((DateTime.Now.Year - item.DateOfJoining.Year) * 12) + DateTime.Now.Month - item.DateOfJoining.Month;
+                                            var expDisplay = expMonths >= 12 ? (expMonths / 12) + "y " + (expMonths % 12) + "m" : expMonths + "m";
+                                        }
+                                        <small class="text-muted">Tenure: @expDisplay</small>
+                                    </td>
+                                    <td>
+                                        @if (item.IsActive)
+                                        {
+                                            <span class="status-pill" style="background: #dcfce7; color: #166534;">
+                                                <span class="dot" style="background: #22c55e;"></span> Active
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-pill" style="background: #fee2e2; color: #991b1b;">
+                                                <span class="dot" style="background: #ef4444;"></span> Off-boarded
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="text-right pr-4 align-middle">
+                                        <div class="action-group">
+                                            <a href="@Url.Action("Details", new { id = item.EmployeeID })" class="btn btn-view" title="View Profile">
+                                                <i class="fas fa-id-card"></i>
+                                            </a>
+                                            <a href="@Url.Action("Edit", new { id = item.EmployeeID })" class="btn btn-edit" title="Edit">
+                                                <i class="fas fa-user-edit"></i>
+                                            </a>
+                                            <a href="@Url.Action("Delete", new { id = item.EmployeeID })" class="btn btn-off"
+                                               onclick="return confirm('Archive this record?');" title="Offboard">
+                                                <i class="fas fa-user-minus"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        function searchTable() {
+            let input = document.getElementById("myInput").value.toUpperCase();
+            let rows = document.querySelector("#empTable tbody").rows;
+            for (let row of rows) {
+                let name = row.cells[0].textContent.toUpperCase();
+                let dept = row.cells[1].textContent.toUpperCase();
+                row.style.display = (name.includes(input) || dept.includes(input)) ? "" : "none";
+            }
+        }
+    </script>
+}

@@ -1,0 +1,218 @@
+﻿@model List<TeamPulse.ViewModels.MonthlyReportVM>
+@{
+    ViewData["Title"] = "Monthly Attendance Report";
+    int year = ViewBag.SelectedYear;
+    int month = ViewBag.SelectedMonth;
+    int daysInMonth = ViewBag.DaysInMonth;
+}
+
+<style>
+    /* Professional Card & Layout */
+    .report-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        background: #fff;
+    }
+
+    .muster-wrapper {
+        max-height: 70vh;
+        overflow: auto;
+        border-radius: 8px;
+    }
+
+    /* Sticky Header & Columns */
+    .table-muster thead th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa;
+        color: #334155;
+        font-size: 11px;
+        font-weight: 700;
+        z-index: 20;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .sticky-col {
+        position: sticky;
+        left: 0;
+        background-color: #fff !important;
+        z-index: 10;
+        border-right: 2px solid #edf2f7 !important;
+        min-width: 180px;
+        text-align: left !important;
+        padding-left: 15px !important;
+    }
+
+    .table-muster thead th.sticky-col {
+        z-index: 30;
+        top: 0;
+    }
+
+    /* Attendance Cells Customization */
+    .cell-data {
+        width: 32px;
+        min-width: 32px;
+        height: 35px;
+        font-size: 12px;
+        vertical-align: middle !important;
+        border-color: #f1f5f9 !important;
+    }
+
+    .weekend {
+        background-color: #fff5f5 !important;
+        color: #e53e3e !important;
+    }
+    /* Light red for weekends */
+
+    /* Status Badges */
+    .status-p {
+        color: #10b981;
+        font-weight: 800;
+    }
+
+    .status-a {
+        color: #ef4444;
+        font-weight: 800;
+    }
+
+    .status-h {
+        color: #f59e0b;
+        font-weight: 800;
+    }
+
+    .status-l {
+        color: #3b82f6;
+        font-weight: 800;
+    }
+
+    /* Total Columns */
+    .col-total {
+        background-color: #f1f5f9 !important;
+        font-weight: 700;
+        width: 45px;
+    }
+
+    /* Custom Scrollbar for modern look */
+    .muster-wrapper::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .muster-wrapper::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="row align-items-center mb-4">
+        <div class="col-md-6">
+            <h3 class="font-weight-bold text-dark mb-0">
+                <i class="fas fa-clipboard-list text-primary mr-2"></i>Monthly Muster Roll
+            </h3>
+            <p class="text-muted mb-0">Attendance overview for @System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month) @year</p>
+        </div>
+        <div class="col-md-6">
+            <form class="d-flex justify-content-md-end gap-2">
+                <div class="input-group input-group-sm w-auto mr-2">
+                    <div class="input-group-prepend"><span class="input-group-text bg-white border-right-0"><i class="far fa-calendar-alt"></i></span></div>
+                    <select name="month" class="form-control border-left-0 shadow-none">
+                        @for (int i = 1; i <= 12; i++)
+                        {
+                            <!option value="@i" @(i == month ? "selected" : "")>@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(i)</!option>
+                        }
+                    </select>
+                </div>
+                <div class="input-group input-group-sm w-auto mr-2">
+                    <select name="year" class="form-control shadow-none">
+                        @for (int i = 2024; i <= 2030; i++)
+                        {
+                            <!option value="@i" @(i == year ? "selected" : "")>@i</!option>
+                        }
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm">
+                    <i class="fas fa-sync-alt mr-1"></i> Generate
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card report-card">
+        <div class="card-body p-0">
+            <div class="muster-wrapper">
+                <table class="table table-bordered table-muster mb-0 text-center">
+                    <thead>
+                        <tr>
+                            <th class="sticky-col">Employee Name</th>
+                            @for (int d = 1; d <= daysInMonth; d++)
+                            {
+                                var dateValue = new DateTime(year, month, d);
+                                bool isSunday = dateValue.DayOfWeek == DayOfWeek.Sunday;
+                                <th class="cell-data @(isSunday ? "weekend" : "")">
+                                    @d <br />
+                                    <small class="font-weight-normal">@dateValue.ToString("ddd")[0]</small>
+                                </th>
+                            }
+                            <th class="col-total text-success">P</th>
+                            <th class="col-total text-danger">A</th>
+                            <th class="col-total text-warning">H</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="sticky-col font-weight-bold text-dark">
+                                    @item.EmployeeName
+                                </td>
+
+                                @for (int d = 1; d <= daysInMonth; d++)
+                                {
+                                    var dateValue = new DateTime(year, month, d);
+                                    bool isSunday = dateValue.DayOfWeek == DayOfWeek.Sunday;
+                                    var status = item.DayStatuses[d];
+
+                                    string statusClass = status switch
+                                    {
+                                        "P" => "status-p",
+                                        "A" => "status-a",
+                                        "H" => "status-h",
+                                        "L" => "status-l",
+                                        _ => "text-muted"
+                                    };
+
+                                    <td class="cell-data @statusClass @(isSunday ? "weekend" : "")">
+                                        @(isSunday && status == "-" ? "OFF" : status)
+                                    </td>
+                                }
+
+                                <td class="col-total text-success">@item.TotalPresent</td>
+                                <td class="col-total text-danger">@item.TotalAbsent</td>
+                                <td class="col-total text-warning">@item.TotalLate</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card-footer bg-light py-3 border-0">
+            <div class="d-flex flex-wrap gap-4 align-items-center">
+                <span class="small text-muted font-weight-bold mr-3">LEGEND:</span>
+                <span class="badge badge-white border px-2 py-1 mr-2"><b class="status-p">P</b> Present</span>
+                <span class="badge badge-white border px-2 py-1 mr-2"><b class="status-a">A</b> Absent</span>
+                <span class="badge badge-white border px-2 py-1 mr-2"><b class="status-h">H</b> Half Day</span>
+                <span class="badge badge-white border px-2 py-1 mr-2"><b class="status-l">L</b> Leave</span>
+                <span class="badge badge-white border px-2 py-1 mr-2"><b class="text-danger">OFF</b> Sunday</span>
+
+                <div class="ml-auto">
+                    <button class="btn btn-outline-success btn-sm" onclick="window.print()">
+                        <i class="fas fa-file-excel mr-1"></i> Export Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

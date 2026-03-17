@@ -1,0 +1,275 @@
+﻿@model IEnumerable<TeamPulse.ViewModels.HolidayVM>
+@{
+    ViewData["Title"] = "Company Calendar";
+}
+
+<style>
+    /* modern background and font */
+    :root {
+        --holiday-mandatory: #059669;
+        --holiday-optional: #d97706;
+    }
+
+    /* Date Badge UI */
+    .date-badge {
+        width: 65px;
+        text-align: center;
+        border-radius: 12px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+    }
+
+        .date-badge .month {
+            background: #ef4444;
+            color: white;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 2px 0;
+        }
+
+        .date-badge .day {
+            font-size: 20px;
+            font-weight: 800;
+            color: #1e293b;
+            line-height: 1.2;
+            padding: 5px 0;
+        }
+
+    /* Table & Card UI */
+    .holiday-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .table thead th {
+        background-color: #f8fafc;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        color: #64748b;
+        border: none;
+    }
+
+    .table td {
+        vertical-align: middle !important;
+        border-bottom: 1px solid #f1f5f9;
+        padding: 1.2rem 1rem;
+    }
+
+    /* Custom Badges */
+    .badge-pill-modern {
+        padding: 6px 15px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    .bg-soft-success {
+        background: #ecfdf5;
+        color: var(--holiday-mandatory);
+    }
+
+    .bg-soft-warning {
+        background: #fffbeb;
+        color: var(--holiday-optional);
+    }
+
+    /* Action Buttons */
+    .btn-action {
+        width: 35px;
+        height: 35px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        transition: 0.3s;
+    }
+
+    .btn-edit-soft {
+        background: #fef3c7;
+        color: #92400e;
+        border: none;
+    }
+
+    .btn-delete-soft {
+        background: #fee2e2;
+        color: #b91c1c;
+        border: none;
+    }
+
+    .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    /* Modal Form */
+    .modal-content {
+        border-radius: 24px;
+        border: none;
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+    }
+
+    .form-modern {
+        border-radius: 12px;
+        padding: 0.75rem;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+    }
+
+        .form-modern:focus {
+            background: #fff;
+            border-color: #ef4444;
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+        }
+</style>
+
+<div class="content-header py-4">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="font-weight-bold text-dark mb-0">Holiday Calendar</h2>
+                <p class="text-muted small mb-0"><i class="fas fa-umbrella-beach mr-1"></i> Public and restricted holidays for the current year</p>
+            </div>
+            <button class="btn btn-danger rounded-pill px-4 shadow-sm font-weight-bold" onclick="openModal(0, '', '', false)">
+                <i class="fas fa-plus-circle mr-1"></i> Add Holiday
+            </button>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert bg-white border-left border-success shadow-sm alert-dismissible fade show mb-4">
+                <i class="fas fa-check-circle text-success mr-2"></i> @TempData["Success"]
+                <button class="close" data-dismiss="alert">&times;</button>
+            </div>
+        }
+
+        <div class="card holiday-card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="pl-4">Scheduled Date</th>
+                                <th>Occasion / Name</th>
+                                <th>Category</th>
+                                <th class="text-right pr-4">Management</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="pl-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="date-badge mr-3">
+                                                <div class="month">@item.HolidayDate.ToString("MMM")</div>
+                                                <div class="day">@item.HolidayDate.Day</div>
+                                            </div>
+                                            <div>
+                                                <div class="font-weight-bold text-dark">@item.HolidayDate.DayOfWeek</div>
+                                                <small class="text-muted">Year @item.HolidayDate.Year</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="h6 font-weight-bold text-dark mb-0">@item.HolidayName</span>
+                                    </td>
+                                    <td>
+                                        @if (item.IsOptional)
+                                        {
+                                            <span class="badge-pill-modern bg-soft-warning">
+                                                <i class="fas fa-star mr-1"></i> Optional (RH)
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge-pill-modern bg-soft-success">
+                                                <i class="fas fa-check-double mr-1"></i> Mandatory (PH)
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="text-right pr-4">
+                                        <button class="btn-action btn-edit-soft mr-2"
+                                                onclick="openModal(@item.HolidayID, '@item.HolidayName', '@item.HolidayDate.ToString("yyyy-MM-dd")', @item.IsOptional.ToString().ToLower())"
+                                                title="Edit Event">
+                                            <i class="fas fa-pen-nib"></i>
+                                        </button>
+
+                                        <a href="@Url.Action("DeleteHoliday", "Masters", new { id = item.HolidayID })"
+                                           class="btn-action btn-delete-soft"
+                                           onclick="return confirm('Remove this holiday from the calendar?');"
+                                           title="Delete Event">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="holidayModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header bg-white border-0 p-4 pb-0">
+                <h5 class="modal-title font-weight-bold text-dark" id="modalTitle">Holiday Settings</h5>
+                <button class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <form asp-action="SaveHoliday" asp-controller="Masters" method="post">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="HolidayID" id="hdnId" value="0" />
+
+                    <div class="form-group mb-4">
+                        <label class="small font-weight-bold text-muted text-uppercase">Occasion Title</label>
+                        <input type="text" name="HolidayName" id="txtName" class="form-control form-modern" required placeholder="e.g. Diwali / Christmas" />
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label class="small font-weight-bold text-muted text-uppercase">Calendar Date</label>
+                        <input type="date" name="HolidayDate" id="txtDate" class="form-control form-modern" required />
+                    </div>
+
+                    <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                        <input type="checkbox" name="IsOptional" id="chkOptional" class="custom-control-input" value="true" />
+                        <label class="custom-control-label small font-weight-bold" for="chkOptional">Mark as Optional / Restricted Holiday</label>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4 shadow">Update Calendar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(id, name, date, isOptional) {
+            $('#hdnId').val(id);
+            $('#txtName').val(name);
+            $('#txtDate').val(date);
+            $('#chkOptional').prop('checked', isOptional);
+
+            if (id === 0) {
+                $('#modalTitle').html('<i class="fas fa-plus text-danger mr-2"></i>Register New Holiday');
+            } else {
+                $('#modalTitle').html('<i class="fas fa-edit text-danger mr-2"></i>Modify Holiday Details');
+            }
+
+            $('#holidayModal').modal('show');
+        }
+    </script>
+}

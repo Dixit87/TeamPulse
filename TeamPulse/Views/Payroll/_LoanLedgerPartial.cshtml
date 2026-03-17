@@ -1,0 +1,23 @@
+﻿@model IEnumerable<TeamPulse.Models.TblLoanRepayment>
+
+<table class="table table-sm">
+    <thead class="bg-light">
+        <tr>
+            <th>Inst. No</th>
+            <th>Date</th>
+            <th>Amount Paid</th>
+            <th>Remaining</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>#@item.InstallmentNo</td>
+                <td>@item.PaymentDate.ToString("dd MMM yyyy")</td>
+                <td class="text-success font-weight-bold">₹ @item.AmountPaid.ToString("N2")</td>
+                <td class="text-muted">₹ @item.RemainingBalance.ToString("N2")</td>
+            </tr>
+        }
+    </tbody>
+</table>

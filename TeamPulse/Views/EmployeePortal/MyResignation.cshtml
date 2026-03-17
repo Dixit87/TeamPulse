@@ -1,0 +1,106 @@
+﻿@model TeamPulse.Models.TblResignation
+@{
+    Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    ViewData["Title"] = "Resignation & Exit";
+
+    // 🚀 Smart Logic Variables
+    // Agar data nahi hai (Model null) YA status Rejected hai -> to Form dikhao
+    bool showApplyForm = (Model == null || Model.Status == "Rejected");
+
+    // Agar status Pending ya Approved hai -> to Tracker dikhao
+    bool showTracker = (Model != null && (Model.Status == "Pending" || Model.Status == "Approved"));
+}
+
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show rounded-pill px-4 mb-4 shadow-sm">
+                    <i class="fas fa-check-circle mr-2"></i> @TempData["Success"]
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                </div>
+            }
+
+            @if (Model != null && Model.Status == "Rejected")
+            {
+                <div class="alert alert-danger border-0 shadow-sm mb-4" style="border-radius: 15px; background-color: #fff5f5;">
+                    <h6 class="font-weight-bold text-danger"><i class="fas fa-exclamation-circle mr-2"></i> Your previous resignation was rejected</h6>
+                    <p class="small text-dark mb-0"><strong>HR Feedback:</strong> "@Model.AdminRemarks"</p>
+                </div>
+            }
+
+            <div class="card shadow-sm border-0" style="border-radius: 20px; overflow: hidden;">
+                <div class="card-header bg-dark text-white p-4">
+                    <h4 class="font-weight-bold mb-0"><i class="fas fa-walking mr-2"></i> Resignation & Exit Process</h4>
+                </div>
+
+                <div class="card-body p-4">
+
+                    @if (showApplyForm)
+                    {
+                        @* --- 📝 SECTION 1: APPLY FORM (New or Re-apply) --- *@
+                        <div class="text-center mb-4">
+                            <i class="fas fa-door-open fa-3x text-muted mb-3"></i>
+                            <h5 class="font-weight-bold">@(Model == null ? "Thinking of moving on?" : "Re-apply for Resignation")</h5>
+                            <p class="text-muted">Submit your formal resignation here. Your notice period (30 days) starts today.</p>
+                        </div>
+
+                        <form asp-action="SubmitResignation" method="post">
+                            <div class="form-group">
+                                <label class="small font-weight-bold text-muted text-uppercase">Reason for Resignation</label>
+                                @* Model?.Reason likhne se purana reason apne aap box me aa jayega *@
+                                <textarea name="Reason" class="form-control" rows="5" placeholder="Please share your reasons..." required style="border-radius:15px; background:#f8fafc;">@Model?.Reason</textarea>
+                            </div>
+                            <div class="alert alert-warning small border-0 py-3" style="border-radius: 12px;">
+                                <i class="fas fa-info-circle mr-1"></i> Note: Last working day is calculated as 30 days from today.
+                            </div>
+                            <button type="submit" class="btn btn-danger btn-block btn-lg font-weight-bold shadow" onclick="return confirm('Confirm resignation submission?')">
+                                @(Model == null ? "Submit Resignation" : "Re-submit Resignation")
+                            </button>
+                        </form>
+                    }
+                    else if (showTracker)
+                    {
+                        @* --- ⏳ SECTION 2: STATUS TRACKER (Pending or Approved) --- *@
+                        <div class="text-center py-4">
+                            @{
+                                var daysRemaining = (Model.LastWorkingDay - DateTime.Now).Days;
+                                if (daysRemaining < 0) daysRemaining = 0;
+                                string statusBadge = Model.Status == "Pending" ? "badge-warning" : "badge-success";
+                            }
+
+                            <div class="mb-4">
+                                <span class="badge @statusBadge p-2 px-4 rounded-pill shadow-sm">Status: @Model.Status</span>
+                            </div>
+
+                            <h2 class="font-weight-bold text-dark">LWD: @Model.LastWorkingDay.ToString("dd MMM yyyy")</h2>
+                            <p class="text-muted">Official Last Working Day</p>
+
+                            <div class="row mt-5">
+                                <div class="col-6 border-right">
+                                    <h4 class="font-weight-bold mb-0 text-primary" style="font-size: 2.5rem;">@daysRemaining</h4>
+                                    <small class="text-uppercase text-muted font-weight-bold">Days to go</small>
+                                </div>
+                                <div class="col-6">
+                                    <h4 class="font-weight-bold mb-0 text-dark" style="font-size: 2.5rem;">@Model.ResignDate.ToString("dd")</h4>
+                                    <small class="text-uppercase text-muted font-weight-bold">Applied in @Model.ResignDate.ToString("MMM")</small>
+                                </div>
+                            </div>
+
+                            @if (Model.Status == "Approved")
+                            {
+                                <div class="mt-5 p-3 bg-light rounded-lg border border-success">
+                                    <p class="mb-0 text-success font-weight-bold">
+                                        <i class="fas fa-check-circle mr-1"></i> Your resignation is approved. HR will contact you for F&F.
+                                    </p>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

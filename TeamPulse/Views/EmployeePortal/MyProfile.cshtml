@@ -1,0 +1,338 @@
+﻿@model TeamPulse.Models.TblEmployee
+@{
+    Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    ViewData["Title"] = "My Profile";
+
+    // Naam ko properly set karna (First Name + Last Name)
+    string fullName = Model.FirstName + (string.IsNullOrEmpty(Model.LastName) ? "" : " " + Model.LastName);
+
+    // Avatar ke liye naam ka pehla akshar
+    string initial = Model.FirstName != null && Model.FirstName.Length > 0 ? Model.FirstName.Substring(0, 1).ToUpper() : "E";
+}
+
+<style>
+    :root {
+        --dash-primary: #4361ee;
+        --dash-success: #2ec4b6;
+        --bg-soft: #f8f9fc;
+    }
+
+    body {
+        background-color: var(--bg-soft);
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* Hero Header */
+    .profile-header {
+        background: linear-gradient(135deg, var(--dash-primary) 0%, #3a0ca3 100%);
+        border-radius: 20px;
+        padding: 40px 20px;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        background: #fff;
+        color: var(--dash-primary);
+        font-size: 3.5rem;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        border: 4px solid rgba(255,255,255,0.8);
+        margin: 0 auto 15px auto;
+    }
+
+    /* Detail Cards */
+    .detail-card {
+        background: #fff;
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        height: 100%;
+    }
+
+    .info-label {
+        color: #64748b;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 2px;
+        font-weight: 600;
+    }
+
+    .info-value {
+        color: #1e293b;
+        font-weight: 700;
+        font-size: 1.05rem;
+        margin-bottom: 15px;
+        border-bottom: 1px dashed #e2e8f0;
+        padding-bottom: 8px;
+    }
+
+    /* Bootstrap Tabs Customization */
+    .nav-tabs-custom {
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+        .nav-tabs-custom .nav-link {
+            border: none;
+            color: #64748b;
+            font-weight: 600;
+            padding: 12px 25px;
+            border-radius: 0;
+            position: relative;
+        }
+
+            .nav-tabs-custom .nav-link.active {
+                color: var(--dash-primary);
+                background: transparent;
+            }
+
+                .nav-tabs-custom .nav-link.active::after {
+                    content: '';
+                    position: absolute;
+                    bottom: -2px;
+                    left: 0;
+                    right: 0;
+                    height: 3px;
+                    background-color: var(--dash-primary);
+                    border-top-left-radius: 3px;
+                    border-top-right-radius: 3px;
+                }   
+</style>
+
+<div class="profile-header text-center shadow-lg">
+    <div class="profile-avatar" style="flex-direction: column; background: transparent; border: none; box-shadow: none;">
+        @{
+            string dbPath = Model.PhotoPath ?? "";
+            string photoUrl = "/theme/dist/img/avatar5.png"; // Default Image
+
+            if (!string.IsNullOrEmpty(dbPath))
+            {
+                string cleanPath = dbPath.Replace("\\", "/");
+
+                // CASE 1: Agar database me sirf file ka naam save hai (Jaise: "photo.jpg")
+                if (!cleanPath.Contains("/"))
+                {
+                    photoUrl = "/uploads/employees/" + cleanPath;
+                }
+                // CASE 2: Agar database me "uploads" ke sath path hai
+                else if (cleanPath.IndexOf("uploads", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    int idx = cleanPath.IndexOf("uploads", StringComparison.OrdinalIgnoreCase);
+                    photoUrl = "/" + cleanPath.Substring(idx);
+                }
+                // CASE 3: Kuch aur path ho to
+                else
+                {
+                    photoUrl = cleanPath.StartsWith("/") ? cleanPath : "/" + cleanPath;
+                }
+            }
+        }
+
+        <div style="width: 120px; height: 120px; margin: 0 auto; border-radius: 50%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 4px solid rgba(255,255,255,0.8); overflow: hidden; background: #fff;">
+            <img src="@Url.Content(photoUrl)" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='/theme/dist/img/avatar5.png';" />
+        </div>
+
+        @* <div style="font-size: 10px; color: yellow; margin-top: 10px; line-height: 1.2;">
+                DB Path: @dbPath <br/>
+                Final URL: @photoUrl
+            </div> *@
+    </div>
+    <h2 class="font-weight-bold text-white mb-1">@fullName</h2>
+
+        <div class="text-white-50 font-weight-bold mb-3 d-flex justify-content-center align-items-center flex-wrap">
+            <span class="mx-2"><i class="fas fa-briefcase mr-1 text-white"></i> @(Model.Designation?.DesignationName ?? "Employee")</span>
+            <span class="mx-2"><i class="fas fa-building mr-1 text-white"></i> @(Model.Department?.DepartmentName ?? "N/A")</span>
+            <span class="mx-2"><i class="fas fa-id-badge mr-1 text-white"></i> @Model.EmployeeCode</span>
+        </div>
+
+        <span class="badge badge-light px-3 py-2 rounded-pill font-weight-bold shadow-sm" style="color: var(--dash-primary);">
+            <i class="fas fa-calendar-check mr-1"></i> Joined: @Model.DateOfJoining.ToString("dd MMM yyyy")
+        </span>
+    </div>
+
+    <div class="detail-card p-4">
+
+        <ul class="nav nav-tabs nav-tabs-custom mb-4" id="profileTabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="personal-tab" data-toggle="tab" href="#personal" role="tab"><i class="fas fa-user text-muted mr-2"></i>Personal Info</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="financial-tab" data-toggle="tab" href="#financial" role="tab"><i class="fas fa-landmark text-muted mr-2"></i>Financial & Compliance</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="security-tab" data-toggle="tab" href="#security" role="tab"><i class="fas fa-shield-alt text-muted mr-2"></i>Security</a>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="profileTabsContent">
+
+            <div class="tab-pane fade show active" id="personal" role="tabpanel">
+                <h5 class="font-weight-bold mb-4"><i class="fas fa-address-card text-primary mr-2"></i>Basic Details</h5>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="info-label">Email Address</div>
+                        <div class="info-value"><i class="fas fa-envelope text-muted mr-2"></i>@Model.Email</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="info-label">Mobile Number</div>
+                        <div class="info-value"><i class="fas fa-phone text-muted mr-2"></i>@(Model.MobileNumber ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="info-label">Date of Birth</div>
+                        <div class="info-value"><i class="fas fa-birthday-cake text-muted mr-2"></i>@(Model.DateOfBirth?.ToString("dd MMM yyyy") ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="info-label">Gender</div>
+                        <div class="info-value">@(Model.Gender ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="info-label">Blood Group</div>
+                        <div class="info-value"><i class="fas fa-tint text-danger mr-2"></i>@(Model.BloodGroup ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="info-label">Marital Status</div>
+                        <div class="info-value">@(Model.MaritalStatus ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-label">Current Address</div>
+                        <div class="info-value"><i class="fas fa-map-marker-alt text-muted mr-2"></i>@(Model.CurrentAddress ?? "Not Provided")</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-label">Permanent Address</div>
+                        <div class="info-value"><i class="fas fa-home text-muted mr-2"></i>@(Model.PermanentAddress ?? "Not Provided")</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="financial" role="tabpanel">
+                <div class="alert alert-info border-0 shadow-sm rounded mb-4">
+                    <i class="fas fa-info-circle mr-2"></i> <strong>Note:</strong> If any of your financial details are incorrect, please contact the HR department immediately as this will affect your salary processing.
+                </div>
+
+                <h5 class="font-weight-bold mb-4 mt-2"><i class="fas fa-university text-success mr-2"></i>Bank Details</h5>
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="info-label">Bank Name</div>
+                        <div class="info-value text-primary">@(Model.BankName ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="info-label">Account Number</div>
+                        <div class="info-value">@(Model.AccountNumber ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="info-label">IFSC Code</div>
+                        <div class="info-value">@(Model.Ifsccode ?? "N/A")</div>
+                    </div>
+                </div>
+
+                <h5 class="font-weight-bold mb-4"><i class="fas fa-file-contract text-warning mr-2"></i>Compliance & Tax</h5>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="info-label">PAN Number</div>
+                        <div class="info-value">@(Model.Pannumber ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="info-label">Aadhar Number</div>
+                        <div class="info-value">@(Model.AadharNumber ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="info-label">UAN Number</div>
+                        <div class="info-value">@(Model.Uannumber ?? "N/A")</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="info-label">PF Number</div>
+                        <div class="info-value">@(Model.Pfnumber ?? "N/A")</div>
+                    </div>
+                </div>
+            </div>
+
+        <div class="tab-pane fade" id="security" role="tabpanel">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="text-center mb-4 mt-2">
+                        <i class="fas fa-lock fa-3x text-muted mb-3 opacity-50"></i>
+                        <h5 class="font-weight-bold">Change Password</h5>
+                        <p class="text-muted small">Keep your account secure by updating your password regularly.</p>
+                    </div>
+
+                    <div id="passwordAlert" class="alert text-center font-weight-bold" style="display:none; border-radius: 8px;"></div>
+
+                    <form id="changePasswordForm">
+                        <div class="form-group mb-3">
+                            <label class="font-weight-bold text-dark small">Current Password</label>
+                            <input type="password" id="currentPassword" class="form-control" style="border-radius: 8px; height: 45px;" placeholder="Enter current password" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="font-weight-bold text-dark small">New Password</label>
+                            <input type="password" id="newPassword" class="form-control" style="border-radius: 8px; height: 45px;" placeholder="Enter new password" required>
+                        </div>
+                        <div class="form-group mb-4">
+                            <label class="font-weight-bold text-dark small">Confirm New Password</label>
+                            <input type="password" id="confirmPassword" class="form-control" style="border-radius: 8px; height: 45px;" placeholder="Confirm new password" required>
+                        </div>
+                        <button type="submit" id="btnUpdatePassword" class="btn btn-primary btn-block font-weight-bold shadow-sm" style="border-radius: 8px; height: 45px;">
+                            <i class="fas fa-save mr-2"></i> Update Password
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            // Password Form Submit Logic
+            $('#changePasswordForm').on('submit', function (e) {
+                e.preventDefault(); // Page reload hone se roko
+
+                var btn = $('#btnUpdatePassword');
+                var alertBox = $('#passwordAlert');
+
+                // Button ko loading state me dalo
+                btn.html('<i class="fas fa-spinner fa-spin mr-2"></i> Updating...').prop('disabled', true);
+                alertBox.hide();
+
+                // AJAX Request
+                $.ajax({
+                    url: '@Url.Action("ChangePassword", "EmployeePortal")',
+                    type: 'POST',
+                    data: {
+                        currentPassword: $('#currentPassword').val(),
+                        newPassword: $('#newPassword').val(),
+                        confirmPassword: $('#confirmPassword').val()
+                    },
+                    success: function (response) {
+                        btn.html('<i class="fas fa-save mr-2"></i> Update Password').prop('disabled', false);
+
+                        if (response.success) {
+                            // Success - Green Alert
+                            alertBox.removeClass('alert-danger').addClass('alert-success').html('<i class="fas fa-check-circle mr-2"></i>' + response.message).fadeIn();
+                            $('#changePasswordForm')[0].reset(); // Form khali kar do
+                        } else {
+                            // Error - Red Alert
+                            alertBox.removeClass('alert-success').addClass('alert-danger').html('<i class="fas fa-exclamation-circle mr-2"></i>' + response.message).fadeIn();
+                        }
+                    },
+                    error: function () {
+                        btn.html('<i class="fas fa-save mr-2"></i> Update Password').prop('disabled', false);
+                        alertBox.removeClass('alert-success').addClass('alert-danger').html('<i class="fas fa-exclamation-triangle mr-2"></i> Something went wrong! Please try again.').fadeIn();
+                    }
+                });
+            });
+
+        });
+    </script>
+}

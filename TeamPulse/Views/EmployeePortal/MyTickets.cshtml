@@ -1,0 +1,202 @@
+﻿@model IEnumerable<TeamPulse.Models.TblTicket>
+@{
+    Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    ViewData["Title"] = "Helpdesk & Support";
+}
+
+<style>
+    :root {
+        --dash-primary: #4361ee;
+        --bg-soft: #f8f9fc;
+    }
+
+    body {
+        background-color: var(--bg-soft);
+        font-family: 'Inter', sans-serif;
+    }
+
+    .ticket-card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #f1f5f9;
+        transition: 0.3s;
+        margin-bottom: 15px;
+    }
+
+        .ticket-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+
+    .status-badge {
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    .status-open {
+        background: #fff7ed;
+        color: #c2410c;
+    }
+    /* Orange */
+    .status-resolved {
+        background: #f0fdf4;
+        color: #15803d;
+    }
+    /* Green */
+    .status-closed {
+        background: #f1f5f9;
+        color: #475569;
+    }
+    /* Gray */
+
+    .priority-high {
+        color: #ef4444;
+        font-weight: bold;
+    }
+
+    .category-tag {
+        background: #eef2ff;
+        color: #4338ca;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: bold;
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h2 class="font-weight-bold text-dark mb-1"><i class="fas fa-headset text-primary mr-2"></i>Support Helpdesk</h2>
+            <p class="text-muted mb-0">Facing any issues? Raise a ticket and our team will resolve it for you.</p>
+        </div>
+        <div class="col-md-4 text-md-right mt-3 mt-md-0">
+            <button class="btn btn-primary font-weight-bold shadow-sm rounded-pill px-4" data-toggle="modal" data-target="#ticketModal">
+                <i class="fas fa-plus-circle mr-2"></i> Raise New Ticket
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <h5 class="font-weight-bold mb-3"><i class="fas fa-history text-secondary mr-2"></i>My Recent Tickets</h5>
+
+            @if (Model != null && Model.Any())
+            {
+                foreach (var t in Model)
+                {
+                    string statusClass = t.Status == "Open" ? "status-open" : t.Status == "Resolved" ? "status-resolved" : "status-closed";
+
+                    <div class="ticket-card p-3 p-md-4">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="d-flex">
+                                <div class="mr-3 text-center">
+                                    <div class="small text-muted font-weight-bold">ID</div>
+                                    <div class="text-primary font-weight-bold">#@t.TicketId</div>
+                                </div>
+                                <div>
+                                    <span class="category-tag text-uppercase">@t.Category</span>
+                                    <h5 class="font-weight-bold text-dark mt-1 mb-1">@t.Subject</h5>
+                                    <p class="text-secondary small mb-2">@t.Description</p>
+                                    <div class="small text-muted">
+                                        <i class="far fa-clock mr-1"></i> Raised on: @t.CreatedAt.ToString("dd MMM yyyy, hh:mm tt")
+                                        @if (t.ResolvedAt != null)
+                                        {
+                                            <span class="ml-2 text-success"><i class="fas fa-check-double mr-1"></i> Resolved on: @t.ResolvedAt?.ToString("dd MMM yyyy")</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="status-badge @statusClass mb-2 d-inline-block">@t.Status</div>
+                                <div class="small @(t.Priority == "High" ? "priority-high" : "text-muted")">
+                                    Priority: @t.Priority
+                                </div>
+                                @if (!string.IsNullOrEmpty(t.Attachment))
+                                {
+                                    <a href="~/uploads/tickets/@t.Attachment" target="_blank" class="btn btn-sm btn-light border mt-2">
+                                        <i class="fas fa-paperclip mr-1"></i> View Attachment
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center py-5 bg-white rounded-lg shadow-sm border mt-2">
+                    <i class="fas fa-ticket-alt fa-3x text-muted mb-3 opacity-25"></i>
+                    <h5 class="font-weight-bold text-dark">No Tickets Found</h5>
+                    <p class="text-muted mb-0">Everything looks good! You haven't raised any support tickets yet.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="ticketModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <div class="modal-header bg-light border-0">
+                <h5 class="modal-title font-weight-bold"><i class="fas fa-plus-circle text-primary mr-2"></i>Explain Your Issue</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <form asp-action="RaiseTicket" method="post" enctype="multipart/form-data">
+                <div class="modal-body p-4">
+                    <div class="row">
+                        <div class="col-md-6 form-group mb-3">
+                            <label class="small font-weight-bold text-muted text-uppercase">Department / Category</label>
+                            <select name="Category" class="form-control" required>
+                                <option value="IT Support">IT Support (Hardware/Software)</option>
+                                <option value="HR / Payroll">HR / Payroll Issue</option>
+                                <option value="Maintenance">Office Maintenance</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 form-group mb-3">
+                            <label class="small font-weight-bold text-muted text-uppercase">Urgency / Priority</label>
+                            <select name="Priority" class="form-control">
+                                <option value="Low">Low (Can Wait)</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="High">High (Immediate Action)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="small font-weight-bold text-muted text-uppercase">Subject / Short Summary</label>
+                        <input type="text" name="Subject" class="form-control" placeholder="e.g. Laptop Keyboard not working" required />
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="small font-weight-bold text-muted text-uppercase">Detailed Description</label>
+                        <textarea name="Description" class="form-control" rows="4" placeholder="Please explain the problem in detail..." required></textarea>
+                    </div>
+
+                    <div class="form-group mb-0">
+                        <label class="small font-weight-bold text-muted text-uppercase">Attach Screenshot (Optional)</label>
+                        <div class="custom-file">
+                            <input type="file" name="ScreenShot" class="custom-file-input" id="scFile">
+                            <label class="custom-file-label" for="scFile">Choose file...</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="submit" class="btn btn-primary btn-block btn-lg font-weight-bold shadow">Submit Ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelector('.custom-file-input').addEventListener('change', function(e) {
+        var fileName = document.getElementById("scFile").files[0].name;
+        var nextSibling = e.target.nextElementSibling;
+        nextSibling.innerText = fileName;
+    });
+</script>

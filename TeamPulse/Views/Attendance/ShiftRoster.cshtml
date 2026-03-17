@@ -1,0 +1,223 @@
+﻿@model List<TeamPulse.ViewModels.ShiftRosterVM>
+@{
+    ViewData["Title"] = "Shift Roster Management";
+    var shifts = ViewBag.ShiftList as List<TeamPulse.Models.TblShift>;
+}
+
+<style>
+    /* Premium Styling */
+    .roster-card {
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+
+    .table-roster thead th {
+        background-color: #fcfaff;
+        border-bottom: 2px solid #f3f0ff;
+        color: #6b7280;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Custom Select Styling */
+    .shift-select {
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        font-weight: 500;
+        color: #4a5568;
+        transition: all 0.2s;
+        height: 38px !important;
+    }
+
+        .shift-select:focus {
+            border-color: #6f42c1;
+            box-shadow: 0 0 0 3px rgba(111, 66, 193, 0.1);
+        }
+
+    /* Employee Row Styling */
+    .emp-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: #f3f0ff;
+        color: #6f42c1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+
+    .current-timing-badge {
+        background-color: #f0fdf4;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+    }
+
+    /* Action Buttons */
+    .btn-update {
+        background: linear-gradient(135deg, #6f42c1 0%, #8950fc 100%);
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: transform 0.2s;
+    }
+
+        .btn-update:hover {
+            transform: scale(1.02);
+            color: white;
+            box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);
+        }
+
+    /* Search Bar */
+    .search-box {
+        border-radius: 10px;
+        padding-left: 35px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 10px;
+        color: #94a3b8;
+    }
+</style>
+
+<form asp-action="UpdateShifts" method="post">
+    <div class="container-fluid py-4">
+        <div class="row align-items-center mb-4">
+            <div class="col-md-5">
+                <h3 class="font-weight-bold text-dark mb-1">Shift Roster</h3>
+                <p class="text-muted mb-0">Optimize workforce by assigning correct shifts.</p>
+            </div>
+            <div class="col-md-4 mt-3 mt-md-0">
+                <div class="position-relative">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="empSearch" class="form-control search-box" placeholder="Quick search employee...">
+                </div>
+            </div>
+            <div class="col-md-3 text-md-right mt-3 mt-md-0">
+                <button type="submit" class="btn btn-primary btn-update px-4 py-2">
+                    <i class="fas fa-check-circle mr-1"></i> Sync Roster
+                </button>
+            </div>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success border-0 shadow-sm alert-dismissible fade show mb-4" role="alert" style="border-left: 5px solid #28a745 !important;">
+                <i class="fas fa-check-circle mr-2"></i> @TempData["Success"]
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        }
+
+        <div class="card roster-card">
+            <div class="table-responsive">
+                <table class="table table-roster align-middle mb-0" id="rosterTable">
+                    <thead>
+                        <tr>
+                            <th class="pl-4">Team Member</th>
+                            <th>Department & Role</th>
+                            <th class="text-center">Active Schedule</th>
+                            <th class="pr-4" style="width: 350px;">Change Shift Assignment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < Model.Count; i++)
+                        {
+                            <tr class="emp-row">
+                                <input type="hidden" asp-for="@Model[i].EmployeeID" />
+
+                                <td class="pl-4 py-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="emp-avatar mr-3">
+                                            @Model[i].EmployeeName.Substring(0, 1)
+                                        </div>
+                                        <div>
+                                            <span class="d-block font-weight-bold text-dark mb-0">@Model[i].EmployeeName</span>
+                                            <span class="text-xs text-muted">ID: #EMP-@Model[i].EmployeeID.ToString().PadLeft(3, '0')</span>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <span class="d-block font-weight-600 text-secondary">@Model[i].DepartmentName</span>
+                                    <small class="text-muted">@Model[i].DesignationName</small>
+                                </td>
+
+                                <td class="text-center">
+                                    @if (!string.IsNullOrEmpty(Model[i].CurrentShiftTime) && Model[i].CurrentShiftTime != "0")
+                                    {
+                                        <span class="current-timing-badge">
+                                            <i class="far fa-clock mr-1"></i> @Model[i].CurrentShiftTime
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-light text-muted">No Shift</span>
+                                    }
+                                </td>
+
+                                <td class="pr-4">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light border-right-0" style="border-radius: 8px 0 0 8px;">
+                                                <i class="fas fa-exchange-alt text-muted" style="font-size: 12px;"></i>
+                                            </span>
+                                        </div>
+                                        <select asp-for="@Model[i].ShiftID" class="form-control shift-select border-left-0 shadow-none">
+                                            <option value="0">Unassigned (General)</option>
+                                            @if (shifts != null)
+                                            {
+                                                foreach (var s in shifts)
+                                                {
+                                                    <option value="@s.ShiftId">@s.ShiftName — (@s.StartTime to @s.EndTime)</option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card-footer bg-white py-3 border-top">
+                <div class="row align-items-center">
+                    <div class="col-md-6 text-muted small">
+                        Showing <strong>@Model.Count</strong> employees in current view
+                    </div>
+                    <div class="col-md-6 text-right">
+                        <button type="submit" class="btn btn-primary px-5 btn-update shadow">
+                            Save All Assignments
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        // Simple search filter
+        document.getElementById('empSearch').addEventListener('keyup', function() {
+            let val = this.value.toLowerCase();
+            let rows = document.querySelectorAll('#rosterTable .emp-row');
+
+            rows.forEach(row => {
+                let text = row.innerText.toLowerCase();
+                row.style.display = text.includes(val) ? '' : 'none';
+            });
+        });
+    </script>
+}

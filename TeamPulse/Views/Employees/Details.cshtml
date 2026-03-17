@@ -1,0 +1,309 @@
+﻿@model TeamPulse.ViewModels.EmployeeVM
+@{
+    ViewData["Title"] = "Talent Profile - " + Model.FirstName;
+}
+
+<style>
+    :root {
+        --profile-bg: #f8fafc;
+        --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    }
+
+    body {
+        background-color: var(--profile-bg);
+    }
+
+    /* Profile Header Overhaul */
+    .profile-banner {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        height: 120px;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .profile-card-main {
+        margin-top: -60px;
+        border: none;
+        border-radius: 20px;
+        box-shadow: var(--card-shadow);
+    }
+
+    .profile-avatar-container {
+        position: relative;
+        display: inline-block;
+    }
+
+    .profile-avatar-main {
+        width: 130px;
+        height: 130px;
+        border: 5px solid #fff;
+        border-radius: 30px;
+        object-fit: cover;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    /* Tab Styling */
+    .nav-pills-modern .nav-link {
+        border-radius: 12px;
+        color: #64748b;
+        font-weight: 600;
+        padding: 10px 20px;
+        transition: 0.3s;
+        border: 1px solid transparent;
+        margin-right: 10px;
+    }
+
+        .nav-pills-modern .nav-link.active {
+            background: #f1f5f9 !important;
+            color: #2563eb !important;
+            border: 1px solid #e2e8f0;
+        }
+
+    /* Data Presentation */
+    .info-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #94a3b8;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .info-value {
+        font-size: 1rem;
+        color: #1e293b;
+        font-weight: 600;
+    }
+
+    .callout-modern {
+        border-radius: 15px;
+        background: #fff;
+        border-left: 5px solid #2563eb;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+    }
+
+    .badge-status {
+        border-radius: 50px;
+        padding: 6px 16px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="font-weight-bold text-dark mb-0">Personnel File</h3>
+            <p class="text-muted small">Managing core records for @Model.FirstName</p>
+        </div>
+        <div class="btn-group">
+            <a href="@Url.Action("Index")" class="btn btn-light rounded-pill px-4 mr-2 border">
+                <i class="fas fa-chevron-left mr-2"></i> Directory
+            </a>
+            <a href="@Url.Action("Edit", new { id = Model.EmployeeID })" class="btn btn-primary rounded-pill px-4 shadow">
+                <i class="fas fa-user-edit mr-2"></i> Update Profile
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-3">
+            <div class="profile-banner"></div>
+            <div class="card profile-card-main text-center pb-4">
+                <div class="profile-avatar-container mb-3">
+                    @if (!string.IsNullOrEmpty(Model.ExistingPhotoPath))
+                    {
+                        <img class="profile-avatar-main" src="~/uploads/employees/@Model.ExistingPhotoPath">
+                    }
+                    else
+                    {
+                        <img class="profile-avatar-main" src="~/theme/dist/img/user2-160x160.jpg">
+                    }
+                </div>
+
+                <h4 class="font-weight-bold text-dark mb-1">@Model.FirstName @Model.LastName</h4>
+                <p class="text-primary font-weight-bold mb-3">@Model.DesignationName</p>
+
+                <div class="px-4">
+                    @if (Model.IsActive)
+                    {
+                        <span class="badge badge-status bg-success-soft text-success border border-success mb-4">
+                            <i class="fas fa-circle mr-1 small"></i> Active Member
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-status bg-danger-soft text-danger border border-danger mb-4">
+                            <i class="fas fa-sign-out-alt mr-1 small"></i> Deactivated
+                        </span>
+                    }
+
+                    <div class="text-left bg-light rounded p-3 mb-3">
+                        <div class="mb-3">
+                            <div class="info-label">Personnel ID</div>
+                            <div class="info-value">#EMP-@Model.EmployeeID.ToString("D4")</div>
+                        </div>
+                        <div class="mb-0">
+                            <div class="info-label">Organization Unit</div>
+                            <div class="info-value">@Model.DepartmentName</div>
+                        </div>
+                    </div>
+
+                    <a href="mailto:@Model.Email" class="btn btn-dark btn-block rounded-pill mb-2">
+                        <i class="fas fa-paper-plane mr-2"></i> Message
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-9">
+            <div class="card border-0 shadow-sm" style="border-radius: 20px;">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <ul class="nav nav-pills nav-pills-modern" id="pills-tab" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-toggle="pill" href="#pills-personal"><i class="fas fa-fingerprint mr-2"></i>Personal</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="pill" href="#pills-official"><i class="fas fa-briefcase mr-2"></i>Employment</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="pill" href="#pills-finance"><i class="fas fa-wallet mr-2"></i>Finance & Tax</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="card-body p-4">
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="pills-personal">
+                            <h6 class="font-weight-bold text-uppercase mb-4" style="letter-spacing: 2px; color: #64748b;">Contact Discovery</h6>
+                            <div class="row">
+                                <div class="col-md-4 mb-4">
+                                    <div class="info-label">Corporate Email</div>
+                                    <div class="info-value text-primary">@Model.Email</div>
+                                </div>
+                                <div class="col-md-4 mb-4">
+                                    <div class="info-label">Primary Mobile</div>
+                                    <div class="info-value">@Model.MobileNumber</div>
+                                </div>
+                                <div class="col-md-4 mb-4">
+                                    <div class="info-label">Date of Birth</div>
+                                    <div class="info-value">@Model.DateOfBirth?.ToString("dd MMM yyyy")</div>
+                                </div>
+                                <div class="col-md-4 mb-4">
+                                    <div class="info-label">Identity Gender</div>
+                                    <div class="info-value">@Model.Gender</div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4 border-light">
+
+                            <h6 class="font-weight-bold text-uppercase mb-4" style="letter-spacing: 2px; color: #64748b;">Residential Records</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="p-4 rounded-lg border bg-light h-100">
+                                        <div class="info-label"><i class="fas fa-home mr-2"></i> Current Residence</div>
+                                        <div class="info-value mt-2 small">@Model.CurrentAddress</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="p-4 rounded-lg border bg-light h-100">
+                                        <div class="info-label"><i class="fas fa-map-marked-alt mr-2"></i> Permanent Address</div>
+                                        <div class="info-value mt-2 small">@Model.PermanentAddress</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="pills-official">
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="callout-modern" style="border-left-color: #0ea5e9;">
+                                        <div class="info-label">On-boarding Date</div>
+                                        <div class="h4 font-weight-bold text-dark mb-0">@Model.DateOfJoining.ToString("dd MMMM yyyy")</div>
+                                      
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="callout-modern" style="border-left-color: #10b981;">
+                                        <div class="info-label">Current Compensation (Basic)</div>
+                                        <div class="h4 font-weight-bold text-success mb-0">₹ @Model.BasicSalary.ToString("N0")</div>
+                                        <p class="text-muted small mb-0 mt-2">Excluding variable pay & bonuses</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card bg-light border-0" style="border-radius: 15px;">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="info-label">Working Shift</div>
+                                            <div class="badge badge-warning px-3 py-2 mt-1">@Model.ShiftName</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="info-label">Employment Type</div>
+                                            <div class="info-value">Full-Time Regular</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="info-label">Reporting Manager</div>
+                                            <div class="info-value">System Administrator</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="pills-finance">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="font-weight-bold mb-3">Disbursement Account</h6>
+                                    <div class="card border shadow-none" style="border-radius: 15px; background: linear-gradient(to right, #ffffff, #f8fafc);">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center mb-3">
+                                                <div class="bg-primary-soft p-3 rounded mr-3"><i class="fas fa-university text-primary fa-lg"></i></div>
+                                                <div>
+                                                    <div class="small text-muted">Bank Partner</div>
+                                                    <div class="font-weight-bold">@Model.BankName</div>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <div class="info-label">Account Number</div>
+                                                <div class="info-value text-dark" style="letter-spacing: 2px;">@Model.AccountNumber</div>
+                                            </div>
+                                            <div>
+                                                <div class="info-label">Routing Code (IFSC)</div>
+                                                <div class="info-value">@Model.Ifsccode</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="font-weight-bold mb-3">Government Compliance</h6>
+                                    <div class="table-responsive rounded border">
+                                        <table class="table table-sm mb-0">
+                                            <tr class="bg-light">
+                                                <td class="p-3 info-label">ID Type</td>
+                                                <td class="p-3 info-label">Reference Number</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="p-3 font-weight-bold">Permanent Account (PAN)</td>
+                                                <td class="p-3 text-primary font-weight-bold">@Model.PANNumber</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="p-3 font-weight-bold">Aadhar / National ID</td>
+                                                <td class="p-3">@Model.AadharNumber</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="p-3 font-weight-bold">UAN (Provident Fund)</td>
+                                                <td class="p-3">@Model.UANNumber</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,246 @@
+﻿@model TeamPulse.Models.TblPayrollProcessing
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payslip_@Model.Employee.FirstName _@Model.Month _@Model.Year</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <style>
+       @@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+        body {
+            background-color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+            color: #1e293b;
+            padding: 40px 15px;
+        }
+
+        .salary-slip {
+            background: #fff;
+            max-width: 850px;
+            margin: auto;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            padding: 50px;
+            position: relative;
+            overflow: hidden;
+        }
+
+            /* Watermark */
+            .salary-slip::before {
+                content: "CONFIDENTIAL";
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) rotate(-45deg);
+                font-size: 80px;
+                font-weight: 900;
+                color: rgba(0,0,0,0.02);
+                pointer-events: none;
+                white-space: nowrap;
+            }
+
+        .header-logo {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: #2563eb;
+        }
+
+        .slip-header-title {
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 14px;
+            display: inline-block;
+        }
+
+        .info-label {
+            font-size: 11px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: #334155;
+            font-weight: 600;
+        }
+
+        .table-salary {
+            margin-top: 30px;
+            border: 1px solid #e2e8f0;
+        }
+
+            .table-salary thead th {
+                background: #1e293b;
+                color: #fff;
+                font-size: 12px;
+                text-transform: uppercase;
+                border: none;
+                padding: 12px 20px;
+            }
+
+            .table-salary td {
+                padding: 12px 20px;
+                font-size: 14px;
+                border-color: #f1f5f9;
+            }
+
+        .amount-col {
+            font-weight: 600;
+            text-align: right;
+            width: 150px;
+        }
+
+        .net-salary-banner {
+            background: #2563eb;
+            color: #fff;
+            border-radius: 8px;
+            padding: 25px;
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .signature-box {
+            margin-top: 60px;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+            width: 200px;
+            text-align: center;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        @@media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+
+            .salary-slip {
+                box-shadow: none;
+                border: 1px solid #eee;
+                margin: 0 auto;
+                width: 100%;
+            }
+
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="salary-slip">
+        <div class="text-right mb-4 no-print">
+            <button onclick="window.print()" class="btn btn-dark btn-sm rounded-pill px-4 shadow-sm">
+                <i class="fas fa-print mr-2"></i> Download PDF
+            </button>
+        </div>
+
+        <div class="row align-items-center mb-5">
+            <div class="col-6">
+                <div class="header-logo"><i class="fas fa-layer-group"></i> TEAMPULSE</div>
+                <div class="small text-muted">A-12, Business Tech Park, Sector 62, Noida</div>
+            </div>
+            <div class="col-6 text-right">
+                <div class="slip-header-title">Payslip: @Model.Month @Model.Year</div>
+            </div>
+        </div>
+
+        <div class="p-4 rounded border mb-4 bg-light">
+            <div class="row">
+                <div class="col-3">
+                    <div class="info-label">Employee Name</div>
+                    <div class="info-value">@Model.Employee.FirstName @Model.Employee.LastName</div>
+                </div>
+                <div class="col-3 border-left">
+                    <div class="info-label">Designation</div>
+                    <div class="info-value">
+                        @(Model.Employee.Designation != null ? Model.Employee.Designation.DesignationName : "Executive")
+                    </div>
+                </div>
+                <div class="col-3 border-left">
+                    <div class="info-label">Work Department</div>
+                    <div class="info-value">@(Model.Employee.Department?.DepartmentName ?? "General")</div>
+                </div>
+                <div class="col-3 border-left">
+                    <div class="info-label">Month Days</div>
+                    <div class="info-value">@Model.TotalDays (Paid: @Model.PresentDays)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row no-gutters">
+            <div class="col-md-6 pr-2">
+                <table class="table table-salary table-sm">
+                    <thead><tr><th>Description</th><th class="text-right">Earnings</th></tr></thead>
+                    <tbody>
+                        <tr><td>Basic Salary</td><td class="amount-col">₹@((Model.BasicEarned ?? 0).ToString("N2"))</td></tr>
+                        <tr><td>HRA</td><td class="amount-col">₹@((Model.HraEarned ?? 0).ToString("N2"))</td></tr>
+                        <tr><td>Dearness Allowance</td><td class="amount-col">₹@((Model.DaEarned ?? 0).ToString("N2"))</td></tr>
+                        <tr><td>Special Allowance</td><td class="amount-col">₹@((Model.AllowancesEarned ?? 0).ToString("N2"))</td></tr>
+                        <tr class="bg-light font-weight-bold"><td>Gross Total</td><td class="amount-col">₹@((Model.TotalGross ?? 0).ToString("N2"))</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-6 pl-2">
+                <table class="table table-salary table-sm">
+                    <thead><tr><th>Description</th><th class="text-right">Deductions</th></tr></thead>
+                    <tbody>
+                        <tr><td>Provident Fund (PF)</td><td class="amount-col">₹@((Model.PfDeducted ?? 0).ToString("N2"))</td></tr>
+                        <tr><td>ESI Contribution</td><td class="amount-col">₹@((Model.EsiDeducted ?? 0).ToString("N2"))</td></tr>
+                        <tr><td>Professional Tax</td><td class="amount-col">₹@((Model.PtDeducted ?? 0).ToString("N2"))</td></tr>
+                        <tr><td>Loan EMI Recovery</td><td class="amount-col text-danger">₹@((Model.LoanDeducted ?? 0).ToString("N2"))</td></tr>
+                        <tr class="bg-light font-weight-bold"><td>Total Deductions</td><td class="amount-col">₹@((Model.TotalDeductions ?? 0).ToString("N2"))</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="net-salary-banner shadow">
+            <div>
+                <div class="text-uppercase small font-weight-bold opacity-75">Net Take-Home Pay</div>
+                <div class="h3 mb-0 font-weight-bold">₹ @((Model.NetSalary ?? 0).ToString("N0"))</div>
+            </div>
+            <div class="text-right">
+                <i class="fas fa-wallet fa-3x opacity-25"></i>
+            </div>
+        </div>
+
+        <div class="row align-items-end mt-5">
+            <div class="col-8">
+                <p class="small text-muted mb-0">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    <strong>Note:</strong> This is a digitally signed document and does not require a physical stamp.
+                    For any discrepancies, contact the HR department within 48 hours.
+                </p>
+            </div>
+            <div class="col-4">
+                <div class="signature-box float-right">
+                    Authorised Signatory
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,246 @@
+﻿@model IEnumerable<TeamPulse.Models.StatutoryViewModel>
+@{
+    ViewData["Title"] = "Statutory Compliances";
+}
+
+<style>
+    :root {
+        --pf-color: #0ea5e9;
+        --esi-color: #f43f5e;
+        --pt-color: #f59e0b;
+        --govt-color: #64748b;
+    }
+
+    .compliance-header {
+        background: #fff;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 20px 0;
+    }
+
+    .stat-card {
+        border: none;
+        border-radius: 15px;
+        transition: 0.3s;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+        }
+
+    .card-pf {
+        background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+        color: #0369a1;
+    }
+
+    .card-esi {
+        background: linear-gradient(135deg, #ffe4e6 0%, #fecdd3 100%);
+        color: #9f1239;
+    }
+
+    .card-pt {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        color: #92400e;
+    }
+
+    .card-total {
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+        color: #1e293b;
+    }
+
+    .table-compliance thead th {
+        background-color: #f8fafc;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        letter-spacing: 1px;
+        color: #64748b;
+        border: none;
+        padding: 15px;
+    }
+
+    .table-compliance tbody td {
+        vertical-align: middle;
+        padding: 15px;
+        border-color: #f1f5f9;
+    }
+
+    .month-indicator {
+        width: 4px;
+        height: 25px;
+        background: var(--pf-color);
+        display: inline-block;
+        border-radius: 10px;
+        margin-right: 10px;
+        vertical-align: middle;
+    }
+
+    .btn-ecr {
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 12px;
+        transition: 0.2s;
+    }
+
+        .btn-ecr:hover {
+            background: #1e293b;
+            color: #fff;
+        }
+</style>
+
+<div class="compliance-header mb-4">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h3 class="font-weight-bold mb-0 text-dark">Statutory Compliance Dashboard</h3>
+                <p class="text-muted small mb-0">Financial oversight of PF, ESI, and Tax liabilities</p>
+            </div>
+            <div class="bg-light p-2 rounded-pill border d-flex align-items-center">
+                <i class="fas fa-calendar-alt px-3 text-muted"></i>
+                <form asp-action="Index" method="get">
+                    <select name="year" class="form-control form-control-sm border-0 bg-transparent font-weight-bold" onchange="this.form.submit()">
+                        <option value="2025" selected="@(ViewBag.SelectedYear == 2025)">FY 2024-25</option>
+                        <option value="2026" selected="@(ViewBag.SelectedYear == 2026)">FY 2025-26</option>
+                    </select>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card stat-card card-pf">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <small class="text-uppercase font-weight-bold opacity-75">Provident Fund</small>
+                                <h3 class="font-weight-bold mb-0">₹ @Model.Sum(x => x.TotalPF).ToString("N0")</h3>
+                            </div>
+                            <i class="fas fa-piggy-bank fa-2x opacity-25"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card card-esi">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <small class="text-uppercase font-weight-bold opacity-75">ESI Healthcare</small>
+                                <h3 class="font-weight-bold mb-0">₹ @Model.Sum(x => x.TotalESI).ToString("N0")</h3>
+                            </div>
+                            <i class="fas fa-heartbeat fa-2x opacity-25"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card card-pt">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <small class="text-uppercase font-weight-bold opacity-75">Professional Tax</small>
+                                <h3 class="font-weight-bold mb-0">₹ @Model.Sum(x => x.TotalPT).ToString("N0")</h3>
+                            </div>
+                            <i class="fas fa-gavel fa-2x opacity-25"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card card-total">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <small class="text-uppercase font-weight-bold opacity-75">Net Govt. Liability</small>
+                                <h3 class="font-weight-bold mb-0">₹ @Model.Sum(x => x.TotalLiability).ToString("N0")</h3>
+                            </div>
+                            <i class="fas fa-university fa-2x opacity-25"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-5">
+            <div class="card-header bg-white border-bottom py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-dark">Monthly Challan & Filing Status</h6>
+                    <span class="badge badge-success rounded-pill px-3">FY @ViewBag.SelectedYear Data</span>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-compliance table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th class="pl-4">Filing Period</th>
+                            <th class="text-center">Beneficiaries</th>
+                            <th class="text-right">PF Contribution</th>
+                            <th class="text-right">ESI Contribution</th>
+                            <th class="text-right">Tax (PT/TDS)</th>
+                            <th class="text-right">Total Payable</th>
+                            <th class="text-center">Compliance File</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Any())
+                        {
+                            foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="pl-4">
+                                        <div class="month-indicator"></div>
+                                        <span class="font-weight-bold text-dark">@item.MonthName</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="text-muted font-weight-bold">@item.TotalEmployees</span>
+                                        <div class="small text-muted" style="font-size: 10px;">Employees</div>
+                                    </td>
+                                    <td class="text-right font-weight-bold">₹ @item.TotalPF.ToString("N0")</td>
+                                    <td class="text-right">₹ @item.TotalESI.ToString("N0")</td>
+                                    <td class="text-right">₹ @((item.TotalPT + item.TotalTDS).ToString("N0"))</td>
+                                    <td class="text-right align-middle">
+                                        <div class="text-danger font-weight-bold" style="font-size: 1.1rem;">
+                                            ₹ @item.TotalLiability.ToString("N0")
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group">
+                                            <a href="@Url.Action("DownloadECR", new { monthNo = item.MonthNo, year = ViewBag.SelectedYear })"
+                                               class="btn btn-sm btn-outline-dark btn-ecr px-3">
+                                                <i class="fas fa-file-csv mr-1"></i> ECR File
+                                            </a>
+                                            <button class="btn btn-sm btn-light border ml-1 rounded-circle">
+                                                <i class="fas fa-ellipsis-v text-muted"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-5">
+                                    <div class="opacity-25 mb-3"><i class="fas fa-folder-open fa-4x"></i></div>
+                                    <p class="text-muted">No statutory records found for the selected financial year.</p>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-white border-top py-3">
+                <p class="small text-muted mb-0">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    <strong>Compliance Tip:</strong> Ensure all PF/ESI challans are generated and paid before the 15th of the succeeding month to avoid interest.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>

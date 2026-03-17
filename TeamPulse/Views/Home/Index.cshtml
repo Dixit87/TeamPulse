@@ -1,0 +1,432 @@
+﻿@using Microsoft.AspNetCore.Http
+@{
+    ViewData["Title"] = "Executive Hub";
+    // ✅ Session key "RoleID" use kiya hai (capital D)
+    int? roleId = Context.Session.GetInt32("RoleID") ?? 2;
+
+    // UI fix: Agar admin (4 card) hai to chote dabbe, warna (2 card) hain to bade dabbe
+    string kpiColClass = (roleId == 1) ? "col-lg-3 col-md-6" : "col-lg-6 col-md-6";
+}
+
+<style>
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.9);
+        --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+        --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        --danger-gradient: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+    }
+
+    body {
+        background-color: #f8fafc;
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* ================= PREMIUM HEADER ================= */
+    .dashboard-hero {
+        background: #fff;
+        padding: 1.5rem 0;
+        border-bottom: 1px solid #e2e8f0;
+        margin-bottom: 2rem;
+    }
+
+    /* ================= KPI CARDS (NEUMORPHIC STYLE) ================= */
+    .kpi-card {
+        border: none;
+        border-radius: 20px;
+        padding: 24px;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        background: #fff;
+    }
+
+        .kpi-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+    .kpi-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        font-size: 1.4rem;
+    }
+
+    .bg-soft-blue {
+        background: #eff6ff;
+        color: #3b82f6;
+    }
+
+    .bg-soft-green {
+        background: #f0fdf4;
+        color: #22c55e;
+    }
+
+    .bg-soft-orange {
+        background: #fff7ed;
+        color: #f97316;
+    }
+
+    .bg-soft-red {
+        background: #fef2f2;
+        color: #ef4444;
+    }
+
+    .kpi-value {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--text-main);
+        margin-bottom: 0;
+    }
+
+    .kpi-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* ================= PREMIUM TABLES & CHARTS ================= */
+    .card-premium {
+        border: none;
+        border-radius: 24px;
+        background: #ffffff;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+    }
+
+        .card-premium .card-header {
+            background: transparent;
+            border-bottom: 1px solid #f1f5f9;
+            padding: 20px 24px;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+    .table-modern thead th {
+        background-color: #f8fafc;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        letter-spacing: 1px;
+        border: none;
+        color: var(--text-muted);
+    }
+
+    .table-modern td {
+        vertical-align: middle;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    /* ================= QUICK ACTION BUTTONS ================= */
+    .quick-btn {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 12px 16px;
+        text-align: left;
+        display: flex;
+        align-items: center;
+        transition: 0.3s;
+        color: var(--text-main);
+        font-weight: 600;
+        margin-bottom: 12px;
+        text-decoration: none !important;
+    }
+
+        .quick-btn:hover {
+            background: var(--primary-gradient);
+            color: white !important;
+            border-color: transparent;
+            transform: scale(1.03);
+        }
+
+        .quick-btn i {
+            width: 35px;
+            height: 35px;
+            background: #fff;
+            color: #4f46e5;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+
+    /* ================= PENDING LEAVE LIST ================= */
+    .leave-item {
+        padding: 12px;
+        border-radius: 12px;
+        background: #f8fafc;
+        margin-bottom: 10px;
+        border-left: 4px solid #f59e0b;
+    }
+</style>
+
+<div class="dashboard-hero">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="font-weight-bold mb-1">Command Center</h2>
+                <p class="text-muted small mb-0"><i class="fas fa-calendar-alt mr-1"></i> Today is @DateTime.Now.ToString("dd MMMM, yyyy")</p>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-outline-primary rounded-pill px-4 mr-2">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="btn btn-primary rounded-pill px-4 shadow">
+                    <i class="fas fa-file-export mr-1"></i> Intelligence Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+
+        <div class="row mb-4">
+            @if (roleId == 1 || roleId == 2)
+            {
+                <div class="@kpiColClass mb-4">
+                    <div class="kpi-card">
+                        <div class="kpi-icon bg-soft-blue"><i class="fas fa-users"></i></div>
+                        <div class="kpi-label">Active Workforce</div>
+                        <div class="kpi-value">@ViewBag.TotalEmployees</div>
+                    </div>
+                </div>
+                <div class="@kpiColClass mb-4">
+                    <div class="kpi-card">
+                        <div class="kpi-icon bg-soft-green"><i class="fas fa-user-check"></i></div>
+                        <div class="kpi-label">Today's Attendance</div>
+                        <div class="kpi-value">@ViewBag.PresentToday</div>
+                    </div>
+                </div>
+            }
+
+            @if (roleId == 1 || roleId == 3)
+            {
+                <div class="@kpiColClass mb-4">
+                    <div class="kpi-card border-bottom border-primary">
+                        <div class="kpi-icon bg-soft-orange"><i class="fas fa-credit-card"></i></div>
+                        <div class="kpi-label">Payroll Commitment</div>
+                        <div class="kpi-value">₹ @(((decimal)(ViewBag.LastMonthPayroll ?? 0m)).ToString("N0"))</div>
+                    </div>
+                </div>
+                <div class="@kpiColClass mb-4">
+                    <div class="kpi-card">
+                        <div class="kpi-icon bg-soft-red"><i class="fas fa-receipt"></i></div>
+                        <div class="kpi-label">Daily Burn Rate</div>
+                        <div class="kpi-value">₹ @(((decimal)(ViewBag.TodayExpense ?? 0m)).ToString("N0"))</div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="row">
+
+            @if (roleId == 1 || roleId == 2)
+            {
+                <div class="col-lg-8">
+                    <div class="row">
+                        <div class="col-md-7">
+                            <div class="card card-premium">
+                                <div class="card-header border-0">
+                                    <span><i class="fas fa-chart-pie mr-2 text-primary"></i>Departmental Distribution</span>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="deptChart" height="240"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="card card-premium">
+                                <div class="card-header border-0">
+                                    <span><i class="fas fa-fingerprint mr-2 text-success"></i>Attendance Mix</span>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="attendanceChart" height="240"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card card-premium">
+                        <div class="card-header">
+                            <span><i class="fas fa-rocket mr-2 text-warning"></i>Recent Onboardings</span>
+                            <a href="@Url.Action("Index", "Employee")" class="btn btn-xs btn-light rounded-pill px-3">View All</a>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-modern mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th class="pl-4">Employee</th>
+                                            <th>Business Unit</th>
+                                            <th>Joining Date</th>
+                                            <th class="text-center">Lifecycle</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if (ViewBag.NewJoiners != null)
+                                        {
+                                            @foreach (var emp in ViewBag.NewJoiners)
+                                            {
+                                                <tr>
+                                                    <td class="pl-4">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="avatar-sm mr-3 bg-light rounded-circle p-2 text-primary font-weight-bold" style="width:35px; height:35px; display:flex; align-items:center; justify-content:center;">
+                                                                @(emp.FirstName?[0])
+                                                            </div>
+                                                            <div>
+                                                                <div class="font-weight-bold">@emp.FirstName @emp.LastName</div>
+                                                                <small class="text-muted">ID: #@emp.EmployeeId</small>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td><span class="badge badge-light border px-2 py-1">@emp.Department?.DepartmentName</span></td>
+                                                    <td class="font-weight-bold text-dark">@emp.DateOfJoining.ToString("dd MMM yyyy")</td>
+                                                    <td class="text-center"><span class="badge badge-success rounded-pill px-3">Probation</span></td>
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="@(roleId == 3 ? "col-lg-6" : "col-lg-4")">
+
+                @if (roleId == 1 || roleId == 2)
+                {
+                    <div class="card card-premium overflow-hidden">
+                        <div class="card-header bg-warning text-dark">
+                            <span class="font-weight-bold">Leave Approvals</span>
+                            <span class="badge badge-dark">@((ViewBag.PendingLeaves as IEnumerable<dynamic>)?.Count() ?? 0)</span>
+                        </div>
+                        <div class="card-body">
+                            @if (ViewBag.PendingLeaves != null)
+                            {
+                                @foreach (var leave in ViewBag.PendingLeaves)
+                                {
+                                    <div class="leave-item border-0 shadow-sm d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <div class="font-weight-bold mb-0">@leave.Employee.FirstName</div>
+                                            <small class="text-muted">@leave.LeaveType &bull; @leave.TotalDays Days</small>
+                                        </div>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-success rounded-circle mr-1"><i class="fas fa-check"></i></button>
+                                            <button class="btn btn-sm btn-outline-danger rounded-circle"><i class="fas fa-times"></i></button>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                }
+
+                <div class="card card-premium">
+                    <div class="card-header border-0">Operations Shortcuts</div>
+                    <div class="card-body">
+                        @if (roleId == 1 || roleId == 2)
+                        {
+                            <a href="@Url.Action("Create", "Employee")" class="quick-btn">
+                                <i class="fas fa-user-plus"></i> Recruit Personnel
+                            </a>
+                        }
+
+                        @if (roleId == 1 || roleId == 3)
+                        {
+                            <a href="@Url.Action("ProcessPayroll", "Payroll")" class="quick-btn">
+                                <i class="fas fa-calculator"></i> Run Payroll Batch
+                            </a>
+                            <a href="@Url.Action("Index", "Expense")" class="quick-btn">
+                                <i class="fas fa-wallet"></i> Expense Audit
+                            </a>
+                        }
+
+                        @if (roleId == 1)
+                        {
+                            <a href="@Url.Action("Index", "Reports")" class="quick-btn">
+                                <i class="fas fa-chart-line"></i> Analytics Center
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(function () {
+            // ✅ SCRIPT PROTECTION: Ye JavaScript tabhi chalegi jab Admin ya HR login hoga
+            @if (roleId == 1 || roleId == 2)
+            {
+                    <text>
+                    var deptLabels = @Html.Raw(Json.Serialize(ViewBag.DeptLabels ?? new string[] { }));
+                    var deptData = @Html.Raw(Json.Serialize(ViewBag.DeptCounts ?? new int[] { }));
+                    var attData = @Html.Raw(Json.Serialize(ViewBag.AttendanceCounts ?? new int[] { }));
+
+                    if ($('#deptChart').length) {
+                        new Chart($('#deptChart'), {
+                            type: 'bar',
+                            data: {
+                                labels: deptLabels,
+                                datasets: [{
+                                    label: 'Headcount',
+                                    backgroundColor: '#6366f1',
+                                    borderRadius: 8,
+                                    data: deptData
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { display: false } },
+                                scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }
+                            }
+                        });
+                    }
+
+                    if ($('#attendanceChart').length) {
+                        new Chart($('#attendanceChart'), {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['Present', 'Absent'],
+                                datasets: [{
+                                    data: attData,
+                                    backgroundColor: ['#10b981', '#f43f5e'],
+                                    hoverOffset: 10,
+                                    borderWidth: 0
+                                }]
+                            },
+                            options: {
+                                cutout: '75%',
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } }
+                            }
+                        });
+                    }
+                    </text>
+            }
+        });
+    </script>
+}

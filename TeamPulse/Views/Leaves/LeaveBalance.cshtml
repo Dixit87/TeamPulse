@@ -1,0 +1,231 @@
+﻿@model List<TeamPulse.ViewModels.EmployeeLeaveQuotaVM>
+@{
+    ViewData["Title"] = "Leave Balance Overview";
+    int year = ViewBag.SelectedYear;
+    var leaveHeaders = Model.FirstOrDefault()?.LeaveBalances.Select(l => l.LeaveTypeName).ToList();
+}
+
+<style>
+    /* Custom Scrollbar for Table */
+    .table-responsive::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #c1c7d0;
+        border-radius: 4px;
+    }
+
+    /* Sticky Header logic */
+    .sticky-header th {
+        position: sticky;
+        top: 0;
+        background-color: #fff; /* Fallback */
+        background-color: #f8f9fa;
+        z-index: 10;
+        box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Avatar Styling */
+    .avatar-sm {
+        width: 36px;
+        height: 36px;
+        background-color: #e9ecef;
+        color: #495057;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.85rem;
+        margin-right: 10px;
+        text-transform: uppercase;
+    }
+
+    /* Mini Progress Bar styling */
+    .progress-mini {
+        height: 6px;
+        border-radius: 3px;
+        background-color: #e9ecef;
+        margin-top: 6px;
+    }
+
+    .quota-box {
+        min-width: 140px; /* Ensures columns don't squish too much */
+    }
+</style>
+
+<div class="content-header pt-4 pb-3">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="font-weight-bold text-dark">Leave Balance Overview</h2>
+                <p class="text-muted mb-0">Track employee leave utilization and remaining quotas for <strong>@year</strong>.</p>
+            </div>
+
+            <div class="d-flex align-items-center">
+                <form class="form-inline mr-2" id="yearForm">
+                    <div class="input-group shadow-sm">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white border-right-0"><i class="far fa-calendar-alt"></i></span>
+                        </div>
+                        <select name="year" class="form-control border-left-0" onchange="this.form.submit()">
+                            @for (int i = 2024; i <= 2028; i++)
+                            {
+                                <!option value="@i" @(i == year ? "selected" : "")>@i</!option>
+                            }
+                        </select>
+                    </div>
+                </form>
+                <button class="btn btn-outline-success shadow-sm" onclick="window.print()"><i class="fas fa-file-excel mr-1"></i> Export</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+
+        <div class="card card-outline card-primary shadow-sm border-0">
+            <div class="card-header bg-white border-bottom p-3">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <input type="text" id="searchInput" class="form-control" placeholder="Search employee name or department...">
+                            <div class="input-group-append">
+                                <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8 text-right">
+                        <div class="d-inline-block small text-muted mt-2">
+                            <span class="mr-3"><i class="fas fa-circle text-success text-xs mr-1"></i>Healthy Balance</span>
+                            <span class="mr-3"><i class="fas fa-circle text-warning text-xs mr-1"></i>Running Low</span>
+                            <span><i class="fas fa-circle text-danger text-xs mr-1"></i>Exhausted</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-0 table-responsive" style="max-height: 650px;">
+                <table class="table table-hover text-nowrap mb-0" id="balanceTable">
+                    <thead class="sticky-header">
+                        <tr>
+                            <th class="pl-4 py-3" style="width: 250px;">EMPLOYEE</th>
+                            @if (leaveHeaders != null)
+                            {
+                                foreach (var header in leaveHeaders)
+                                {
+                                    <th class="text-center py-3 text-uppercase text-secondary text-xs">@header</th>
+                                }
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var item in Model)
+                            {
+                                // --- SURAKSHIT INITIALS LOGIC ---
+                                var initials = "";
+                                if (!string.IsNullOrEmpty(item.EmployeeName))
+                                {
+                                    // Naam ko split karo aur faltu ke khali spaces hata do
+                                    var parts = item.EmployeeName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                                    if (parts.Length > 0)
+                                    {
+                                        // Pehle naam ka pehla akshar (Agar naam maujood hai to)
+                                        if (parts[0].Length > 0)
+                                        {
+                                            initials += parts[0][0];
+                                        }
+
+                                        // Agar dusra naam (Last Name) bhi hai, to uska bhi pehla akshar
+                                        if (parts.Length > 1 && parts[1].Length > 0)
+                                        {
+                                            initials += parts[1][0];
+                                        }
+                                    }
+                                }
+
+                                // Agar abhi bhi initials khali hai (matlab naam me gadbad thi), to default 'NA' dikha do
+                                if (string.IsNullOrEmpty(initials))
+                                {
+                                    initials = "NA";
+                                }
+                                // --------------------------------
+
+                                <tr>
+                                    <td class="pl-4 align-middle border-right">
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm shadow-sm">@initials</div>
+                                            <div>
+                                                <h6 class="mb-0 font-weight-bold text-dark">@item.EmployeeName</h6>
+                                                <small class="text-muted"><i class="fas fa-building mr-1"></i>@item.Department</small>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    @foreach (var bal in item.LeaveBalances)
+                                    {
+                                        // Calculations for Visuals
+                                        double usagePercent = bal.TotalQuota > 0 ? ((double)bal.Used / bal.TotalQuota) * 100 : 0;
+                                        string colorClass = "bg-success"; // Green (Good balance)
+                                        string textClass = "text-dark";
+
+                                        if (bal.Remaining == 0) { colorClass = "bg-danger"; textClass = "text-danger"; }
+                                        else if (bal.Remaining <= 2) { colorClass = "bg-warning"; textClass = "text-warning"; }
+
+                                        <td class="align-middle text-center border-right-light">
+                                            <div class="quota-box px-2">
+                                                <div class="d-flex justify-content-between align-items-end mb-1">
+                                                    <span class="h5 mb-0 font-weight-bold @textClass">@bal.Remaining</span>
+                                                    <small class="text-muted" style="font-size: 0.75rem;">
+                                                        Used: <strong>@bal.Used</strong> / @bal.TotalQuota
+                                                    </small>
+                                                </div>
+
+                                                <div class="progress progress-mini">
+                                                    <div class="progress-bar @colorClass" role="progressbar"
+                                                         style="width: @usagePercent%"
+                                                         aria-valuenow="@usagePercent" aria-valuemin="0" aria-valuemax="100">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="10" class="text-center py-5 text-muted">No leave records found for this year.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-white border-top text-muted text-xs">
+                Showing @Model.Count() records. Data updated in real-time.
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Simple Client-Side Search Script
+        $(document).ready(function(){
+            $("#searchInput").on("keyup", function() {
+                var value = $(this).val().toLowerCase();
+                $("#balanceTable tbody tr").filter(function() {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+        });
+    </script>
+}

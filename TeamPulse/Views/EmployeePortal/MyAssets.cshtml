@@ -1,0 +1,229 @@
+﻿@model IEnumerable<TeamPulse.Models.TblAssetIssue>
+@{
+    Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    ViewData["Title"] = "My Assets & Equipments";
+}
+
+<style>
+    :root {
+        --dash-primary: #4361ee;
+        --dash-success: #2ec4b6;
+        --bg-soft: #f8f9fc;
+    }
+
+    body {
+        background-color: var(--bg-soft);
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* KPI Cards */
+    .stat-card {
+        background: #fff;
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        padding: 20px;
+        display: flex;
+        align-items: center;
+    }
+
+    .icon-box {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin-right: 20px;
+    }
+
+    /* Asset Card Design */
+    .asset-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        border: 1px solid #f1f5f9;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+        overflow: hidden;
+        position: relative;
+    }
+
+        .asset-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            border-color: #e2e8f0;
+        }
+
+    .asset-icon-wrapper {
+        background: #f8f9fc;
+        padding: 30px 20px;
+        text-align: center;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .asset-icon {
+        font-size: 3.5rem;
+        color: #64748b;
+        margin-bottom: 10px;
+    }
+
+    .asset-details {
+        padding: 20px;
+    }
+
+    .asset-label {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        margin-bottom: 2px;
+    }
+
+    .asset-value {
+        font-size: 0.95rem;
+        color: #1e293b;
+        font-weight: 600;
+        margin-bottom: 12px;
+    }
+
+    .badge-status {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h2 class="font-weight-bold text-dark mb-1">My Assets</h2>
+            <p class="text-muted mb-0">Equipments and devices assigned to you by the organization.</p>
+        </div>
+        <div class="col-md-4 text-md-right mt-3 mt-md-0">
+            <button class="btn btn-light border font-weight-bold shadow-sm rounded-pill px-4">
+                <i class="fas fa-exclamation-triangle text-warning mr-1"></i> Report Damage
+            </button>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3 mb-md-0">
+            <div class="stat-card border-left-primary" style="border-left: 5px solid var(--dash-primary);">
+                <div class="icon-box" style="background-color: rgba(67, 97, 238, 0.1); color: var(--dash-primary);">
+                    <i class="fas fa-laptop-house"></i>
+                </div>
+                <div>
+                    <h6 class="text-uppercase text-muted font-weight-bold mb-1">Currently Holding</h6>
+                    <h2 class="font-weight-bold text-dark mb-0">@ViewBag.TotalAssigned <small class="text-muted" style="font-size: 1rem;">Items</small></h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="stat-card border-left-success" style="border-left: 5px solid var(--dash-success);">
+                <div class="icon-box" style="background-color: rgba(46, 196, 182, 0.1); color: var(--dash-success);">
+                    <i class="fas fa-check-double"></i>
+                </div>
+                <div>
+                    <h6 class="text-uppercase text-muted font-weight-bold mb-1">Returned Assets</h6>
+                    <h2 class="font-weight-bold text-dark mb-0">@ViewBag.TotalReturned <small class="text-muted" style="font-size: 1rem;">Items</small></h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h5 class="font-weight-bold mb-3 mt-4"><i class="fas fa-box-open text-secondary mr-2"></i>Asset Assignment History</h5>
+
+    <div class="row">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var item in Model)
+            {
+                // Smart Icon Logic based on AssetType
+                string iconClass = "fa-box"; // Default Box icon
+                string typeLower = item.Asset?.AssetType?.ToLower() ?? "";
+
+                if (typeLower.Contains("laptop") || typeLower.Contains("macbook")) iconClass = "fa-laptop";
+                else if (typeLower.Contains("mouse")) iconClass = "fa-mouse";
+                else if (typeLower.Contains("keyboard")) iconClass = "fa-keyboard";
+                else if (typeLower.Contains("mobile") || typeLower.Contains("phone")) iconClass = "fa-mobile-alt";
+                else if (typeLower.Contains("monitor") || typeLower.Contains("screen")) iconClass = "fa-desktop";
+                else if (typeLower.Contains("headphone") || typeLower.Contains("headset")) iconClass = "fa-headphones";
+
+                // Status Logic
+                bool isReturned = item.ReturnDate != null || item.Status == "Returned";
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="asset-card">
+
+                        @if (isReturned)
+                        {
+                            <span class="badge badge-status bg-secondary text-white"><i class="fas fa-history mr-1"></i> Returned</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-status bg-success text-white"><i class="fas fa-check-circle mr-1"></i> In Use</span>
+                        }
+
+                        <div class="asset-icon-wrapper @(isReturned ? "opacity-50" : "")">
+                            <i class="fas @iconClass asset-icon @(isReturned ? "" : "text-primary")"></i>
+                            <h5 class="font-weight-bold text-dark mb-0">@(item.Asset?.AssetName ?? "Unknown Asset")</h5>
+                            <small class="badge badge-light border mt-2">@(item.Asset?.AssetType ?? "N/A")</small>
+                        </div>
+
+                        <div class="asset-details @(isReturned ? "opacity-50" : "")">
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="asset-label">Serial Number</div>
+                                    <div class="asset-value"><i class="fas fa-barcode text-muted mr-2"></i>@(item.Asset?.SerialNo ?? "N/A")</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="asset-label">Assigned On</div>
+                                    <div class="asset-value">@item.IssueDate.ToString("dd MMM yyyy")</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="asset-label">Returned On</div>
+                                    <div class="asset-value">
+                                        @if (item.ReturnDate != null)
+                                        {
+                                            <span class="text-secondary">@item.ReturnDate.Value.ToString("dd MMM yyyy")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-success">--</span>
+                                        }
+                                    </div>
+                                </div>
+                                @if (!string.IsNullOrEmpty(item.Remarks))
+                                {
+                                    <div class="col-12 mt-2">
+                                        <div class="asset-label">Remarks</div>
+                                        <div class="small text-muted font-italic">"@item.Remarks"</div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center py-5 bg-white rounded-lg shadow-sm border">
+                <i class="fas fa-box-open fa-3x text-muted mb-3 opacity-25"></i>
+                <h5 class="font-weight-bold text-dark">No Assets Assigned</h5>
+                <p class="text-muted mb-0">You do not have any company assets assigned to your profile currently.</p>
+            </div>
+        }
+    </div>
+
+</div>

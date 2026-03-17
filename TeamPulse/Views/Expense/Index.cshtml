@@ -1,0 +1,276 @@
+﻿@model IEnumerable<TeamPulse.Models.TblExpense>
+@{
+    ViewData["Title"] = "Expense Analytics";
+
+    // 🚀 THE MAGIC: Dashboard Calculation Logic
+    // Sirf wahi paise jodo jo "Pending" nahi hain aur "Rejected" nahi hain
+    var validExpenses = Model.Where(e => string.IsNullOrEmpty(e.Description) || (!e.Description.Contains("[PENDING APPROVAL]") && !e.Description.Contains("[REJECTED]")));
+
+    decimal totalLifeTime = validExpenses.Sum(e => e.Amount);
+    decimal totalThisMonth = validExpenses.Where(e => e.ExpenseDate.Month == DateTime.Now.Month && e.ExpenseDate.Year == DateTime.Now.Year).Sum(e => e.Amount);
+}
+
+<style>
+    .expense-card {
+        border: none;
+        border-radius: 16px;
+        transition: 0.3s;
+    }
+
+        .expense-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.1);
+        }
+
+    .category-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        font-size: 1.2rem;
+    }
+
+    .cat-office {
+        background: #e0f2fe;
+        color: #0ea5e9;
+    }
+
+    .cat-food {
+        background: #ffedd5;
+        color: #f97316;
+    }
+
+    .cat-travel {
+        background: #f0fdf4;
+        color: #22c55e;
+    }
+
+    .cat-salary {
+        background: #f5f3ff;
+        color: #8b5cf6;
+    }
+
+    .cat-other {
+        background: #f1f5f9;
+        color: #64748b;
+    }
+
+    .table-expense thead th {
+        background: #f8fafc;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        letter-spacing: 1px;
+        border: none;
+        padding: 15px;
+    }
+
+    .amount-text {
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+</style>
+
+<div class="content-header py-4">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="font-weight-bold mb-0">Expense Analytics</h2>
+                <p class="text-muted">Track and manage corporate operational costs</p>
+            </div>
+            <button class="btn btn-primary rounded-pill px-4 shadow" data-toggle="modal" data-target="#addExpenseModal">
+                <i class="fas fa-plus-circle mr-2"></i> Record New Expense
+            </button>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card expense-card bg-white shadow-sm border-left border-info">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <small class="text-uppercase text-muted font-weight-bold">Monthly Burn Rate</small>
+                                <h3 class="font-weight-bold mt-1">₹ @totalThisMonth.ToString("N0")</h3>
+                                <div class="progress progress-xs mt-2" style="height: 4px;">
+                                    <div class="progress-bar bg-info" style="width: 70%"></div>
+                                </div>
+                            </div>
+                            <div class="text-info opacity-50"><i class="fas fa-chart-line fa-2x"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card expense-card bg-white shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <small class="text-uppercase text-muted font-weight-bold">Lifetime Investment</small>
+                                <h4 class="font-weight-bold mt-1 text-dark">₹ @totalLifeTime.ToString("N0")</h4>
+                                <small class="text-success"><i class="fas fa-arrow-up"></i> All time records</small>
+                            </div>
+                            <div class="text-warning opacity-50"><i class="fas fa-vault fa-2x"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card expense-card bg-dark text-white shadow-lg">
+                    <div class="card-body text-center py-4">
+                        <small class="text-uppercase opacity-75">Quick Action</small>
+                        <div class="mt-2">
+                            <button class="btn btn-outline-light btn-sm rounded-pill px-3 mr-2">Download Report</button>
+                            <button class="btn btn-warning btn-sm rounded-pill px-3 text-dark font-weight-bold">Audit Mode</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card expense-card shadow-sm border-0 overflow-hidden">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 font-weight-bold"><i class="fas fa-list-ul mr-2 text-primary"></i>Transaction History</h6>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-expense table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th class="pl-4">Expense Details</th>
+                            <th>Category</th>
+                            <th class="text-right">Voucher Date</th>
+                            <th class="text-right">Transaction Amount</th>
+                            <th class="text-center" style="width: 150px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.OrderByDescending(x => x.ExpenseDate))
+                        {
+                            var catClass = item.Category switch { "Office" => "cat-office", "Food" => "cat-food", "Travel" => "cat-travel", "Salary" => "cat-salary", _ => "cat-other" };
+                            var catIcon = item.Category switch { "Office" => "fa-building", "Food" => "fa-utensils", "Travel" => "fa-car", "Salary" => "fa-user-tie", _ => "fa-box" };
+
+                            // 🚀 SMART STATUS LOGIC
+                            bool isPending = !string.IsNullOrEmpty(item.Description) && item.Description.Contains("[PENDING APPROVAL]");
+                            bool isRejected = !string.IsNullOrEmpty(item.Description) && item.Description.Contains("[REJECTED]");
+                            string cleanDesc = item.Description?.Replace("[PENDING APPROVAL]", "").Replace("[REJECTED]", "").Trim();
+
+                            <tr>
+                                <td class="pl-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="category-icon @catClass mr-3 shadow-sm">
+                                            <i class="fas @catIcon"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-weight-bold text-dark">
+                                                @item.ExpenseTitle
+                                                @if (isPending)
+                                                {
+                                                    <span class="badge badge-warning ml-2 small">Pending</span>
+                                                }
+                                                @if (isRejected)
+                                                {
+                                                    <span class="badge badge-danger ml-2 small">Rejected</span>
+                                                }
+                                            </div>
+                                            <div class="small text-muted">@cleanDesc</div>
+
+                                            @if (!string.IsNullOrEmpty(item.ReceiptImage))
+                                            {
+                                                <a href="~/uploads/receipts/@item.ReceiptImage" target="_blank" class="badge badge-light border text-primary mt-1">
+                                                    <i class="fas fa-paperclip mr-1"></i> View Receipt
+                                                </a>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="align-middle">
+                                    <span class="badge badge-pill @catClass border px-3 py-2">@item.Category</span>
+                                </td>
+                                <td class="text-right align-middle text-muted">
+                                    @item.ExpenseDate.ToString("dd MMM, yyyy")
+                                </td>
+                                <td class="text-right align-middle">
+                                    <span class="amount-text @(isPending || isRejected ? "text-muted" : "text-danger")">
+                                        - ₹@item.Amount.ToString("N0")
+                                    </span>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <div class="d-flex justify-content-center align-items-center">
+                                        @if (isPending)
+                                        {
+                                            <a href="@Url.Action("ApproveClaim", new { id = item.ExpenseID })" class="btn btn-sm btn-success rounded-circle shadow-sm mr-1" title="Approve" onclick="return confirm('Approve this expense claim?')"><i class="fas fa-check"></i></a>
+                                            <a href="@Url.Action("RejectClaim", new { id = item.ExpenseID })" class="btn btn-sm btn-warning rounded-circle shadow-sm mr-2 text-dark" title="Reject" onclick="return confirm('Reject this claim?')"><i class="fas fa-times"></i></a>
+                                        }
+
+                                        <a href="@Url.Action("Delete", new { id = item.ExpenseID })" class="btn btn-sm btn-light rounded-circle text-danger shadow-sm border" onclick="return confirm('Archive this transaction permanently?')">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="addExpenseModal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white p-4">
+                <h5 class="modal-title font-weight-bold"><i class="fas fa-receipt mr-2"></i> Log Operational Expense</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            </div>
+            <form asp-action="Create" method="post">
+                <div class="modal-body p-4">
+                    <div class="form-group">
+                        <label class="small font-weight-bold text-uppercase">Expense Title</label>
+                        <input type="text" name="ExpenseTitle" class="form-control form-control-lg border-primary" placeholder="e.g. Server Hosting Fee" required />
+                    </div>
+
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="small font-weight-bold text-uppercase">Amount (₹)</label>
+                                <input type="number" name="Amount" class="form-control form-control-lg" placeholder="0.00" required />
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="small font-weight-bold text-uppercase">Billing Date</label>
+                                <input type="date" name="ExpenseDate" class="form-control form-control-lg" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="small font-weight-bold text-uppercase">Expense Category</label>
+                        <select name="Category" class="form-control form-control-lg custom-select">
+                            <option value="Office">Office & Maintenance</option>
+                            <option value="Food">Food & Refreshments</option>
+                            <option value="Travel">Travel & Fuel</option>
+                            <option value="Salary">Salary & Wages</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="small font-weight-bold text-uppercase">Notes / Voucher Details</label>
+                        <textarea name="Description" class="form-control" rows="3" placeholder="Additional details for audit..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4">
+                    <button type="submit" class="btn btn-primary btn-block btn-lg shadow">Confirm & Record Expense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

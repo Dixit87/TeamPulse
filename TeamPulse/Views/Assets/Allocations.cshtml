@@ -1,0 +1,291 @@
+﻿@model IEnumerable<TeamPulse.ViewModels.AssetVM>
+@{
+    ViewData["Title"] = "Asset Deployment";
+}
+
+<style>
+    :root {
+        --deploy-accent: #6366f1; 
+        --success-soft: #f0fdf4;
+        --warning-soft: #fffbeb;
+    }
+
+    /* Modern Header Styling */
+    .deployment-header {
+        background: #fff;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 1.5rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .btn-stock-check {
+        border-radius: 12px;
+        font-weight: 600;
+        padding: 8px 20px;
+        transition: 0.3s;
+    }
+
+    /* Allocation Form Card */
+    .allocation-form-card {
+        border: 2px dashed #e2e8f0;
+        border-radius: 20px;
+        background: #f8fafc;
+        transition: 0.3s;
+    }
+
+        .allocation-form-card:hover {
+            border-color: var(--deploy-accent);
+            background: #fff;
+        }
+
+    .form-control-modern {
+        border-radius: 12px;
+        border: 1px solid #cbd5e1;
+        padding: 0.7rem;
+        font-weight: 500;
+    }
+
+        .form-control-modern:focus {
+            border-color: var(--deploy-accent);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+    /* History Table UI */
+    .history-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+
+    .table-deployment thead th {
+        background: #1e293b;
+        color: #fff;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        letter-spacing: 0.1em;
+        border: none;
+        padding: 1.25rem 1rem;
+    }
+
+    .table-deployment tbody td {
+        vertical-align: middle;
+        padding: 1.2rem 1rem;
+        border-color: #f1f5f9;
+    }
+
+    /* Employee Avatar & ID */
+    .user-pill {
+        display: flex;
+        align-items: center;
+    }
+
+    .avatar-sm-id {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: #eef2ff;
+        color: #4338ca;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.75rem;
+        margin-right: 10px;
+    }
+
+    /* Status Badges */
+    .status-badge {
+        padding: 5px 14px;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .status-issued {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
+    }
+
+    .status-returned {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+    }
+
+    /* Return Button */
+    .btn-return-soft {
+        background: #fee2e2;
+        color: #b91c1c;
+        border-radius: 10px;
+        font-weight: 600;
+        padding: 6px 14px;
+        transition: 0.3s;
+        border: none;
+        font-size: 0.8rem;
+    }
+
+        .btn-return-soft:hover {
+            background: #b91c1c;
+            color: #fff;
+            transform: scale(1.05);
+        }
+</style>
+
+<div class="deployment-header">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="font-weight-bold text-dark mb-1">Asset Handover</h2>
+                <p class="text-muted small mb-0"><i class="fas fa-exchange-alt mr-1"></i> Track the movement and possession of corporate resources</p>
+            </div>
+            <a href="@Url.Action("Index")" class="btn btn-light btn-stock-check border shadow-sm">
+                <i class="fas fa-warehouse mr-2 text-primary"></i> View Master Inventory
+            </a>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-custom bg-white border-left border-success shadow-sm alert-dismissible fade show mb-4">
+                <i class="fas fa-check-circle text-success mr-2"></i> @TempData["Success"]
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
+        }
+
+        <div class="card allocation-form-card mb-5">
+            <div class="card-body p-4">
+                <h5 class="font-weight-bold text-dark mb-4"><i class="fas fa-paper-plane mr-2 text-indigo"></i> New Assignment</h5>
+                <form asp-action="IssueAsset" method="post">
+                    <div class="row align-items-end">
+                        <div class="col-md-3 form-group">
+                            <label class="small font-weight-bold text-muted text-uppercase">Assignee (Staff)</label>
+                            <select name="EmployeeID" class="form-control form-control-modern select2" asp-items="ViewBag.Employees" required>
+                                <option value="">Identify Employee...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 form-group">
+                            <label class="small font-weight-bold text-muted text-uppercase">Resource Unit (Available)</label>
+                            <select name="AssetID" class="form-control form-control-modern select2" asp-items="ViewBag.Assets" required>
+                                <option value="">Locate Asset in Stock...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 form-group">
+                            <label class="small font-weight-bold text-muted text-uppercase">Handover Date</label>
+                            <input type="date" name="IssueDate" class="form-control form-control-modern" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                        </div>
+                        <div class="col-md-3 form-group">
+                            <button type="submit" class="btn btn-primary btn-block py-2 font-weight-bold rounded-pill shadow-sm">
+                                <i class="fas fa-link mr-2"></i> Complete Handover
+                            </button>
+                        </div>
+                        <div class="col-md-12 form-group mb-0 mt-2">
+                            <label class="small font-weight-bold text-muted text-uppercase">Handover Memo</label>
+                            <input type="text" name="Remarks" class="form-control form-control-modern" placeholder="Add serial specific details or condition notes..." />
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card history-card shadow-sm">
+            <div class="card-header bg-white border-bottom py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-dark">Deployment Ledger</h6>
+                    <span class="badge badge-light border rounded-pill px-3 py-2 text-muted">Total Records: @Model?.Count()</span>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-deployment mb-0">
+                        <thead>
+                            <tr>
+                                <th class="pl-4">Tracking ID</th>
+                                <th>Issued To</th>
+                                <th>Equipment Specs</th>
+                                <th>Assignment Date</th>
+                                <th class="text-center">Lifecycle Status</th>
+                                <th class="text-center">Operations</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td class="pl-4">
+                                            <code class="text-primary font-weight-bold bg-light px-2 py-1 rounded">#TRK-@item.IssueID</code>
+                                        </td>
+                                        <td>
+                                            <div class="user-pill">
+                                                <div class="avatar-sm-id">@(item.EmployeeName?[0])</div>
+                                                <span class="font-weight-bold text-dark">@item.EmployeeName</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="font-weight-bold text-dark mb-0">@item.AssetName</div>
+                                            <small class="text-muted"><i class="fas fa-barcode mr-1"></i> SN: @item.SerialNumber</small>
+                                        </td>
+                                        <td>
+                                            <div class="text-dark small font-weight-bold">@item.IssueDate.ToString("dd MMM, yyyy")</div>
+                                            <small class="text-muted text-uppercase" style="font-size: 9px;">Formal Handover</small>
+                                        </td>
+                                        <td class="text-center">
+                                            @if (item.Status == "Issued")
+                                            {
+                                                <span class="status-badge status-issued">
+                                                    <span class="mr-2"><i class="fas fa-user-clock"></i></span> In Possession
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="status-badge status-returned">
+                                                    <span class="mr-2"><i class="fas fa-history"></i></span> Stock Recovered
+                                                </span>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            @if (item.Status == "Issued")
+                                            {
+                                                <a href="@Url.Action("ReturnAsset", new { id = item.IssueID })"
+                                                   class="btn-return-soft shadow-sm"
+                                                   onclick="return confirm('Audit this asset return? Unit will be added back to available stock.');">
+                                                    <i class="fas fa-file-import mr-1"></i> Accept Return
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-success small font-weight-bold">
+                                                    <i class="fas fa-check-circle mr-1"></i> Archive Only
+                                                </span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('.select2').select2({
+                theme: 'bootstrap4',
+                placeholder: function() { $(this).data('placeholder'); }
+            });
+        });
+    </script>
+}

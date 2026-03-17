@@ -1,0 +1,322 @@
+﻿@using TeamPulse.Models
+@inject TeamPulseDbContext _context
+@using Microsoft.AspNetCore.Http
+
+@{
+    // 1. Database se Company Settings nikalo
+    var company = _context.TblCompanySettings.FirstOrDefault();
+
+    // 2. Agar null hai to Default values set karo
+    string companyName = company?.CompanyName ?? "TeamPulse HRMS";
+
+    // Logo check: Agar DB me hai to wo use karo, nahi to default AdminLTE logo
+    string companyLogo = !string.IsNullOrEmpty(company?.CompanyLogo)
+                         ? company.CompanyLogo
+                         : "/theme/dist/img/AdminLTELogo.png";
+
+    // 3. 🚀 CURRENT LOGIN USER DETAILS
+    string currentUserName = Context.Session.GetString("UserName") ?? "User";
+    int? currentRoleId = Context.Session.GetInt32("RoleID");
+
+    string roleName = "Staff";
+    if (currentRoleId == 1) roleName = "Super Admin";
+    else if (currentRoleId == 2) roleName = "HR Professional";
+    else if (currentRoleId == 3) roleName = "Accountant";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@ViewData["Title"] | @companyName</title>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <link rel="stylesheet" href="~/theme/plugins/fontawesome-free/css/all.min.css">
+    <link rel="stylesheet" href="~/theme/dist/css/adminlte.min.css">
+
+    <style>
+        /* --- TeamPulse Professional Branding --- */
+        .brand-link,
+        .main-header.navbar-light {
+            /* background-color: #0d6efd !important; */
+            /* color: #fff !important; */
+        }
+
+        .nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+            background-color: #0d6efd !important;
+        }
+
+        /* PROFESSIONAL LOGO STYLING */
+        .main-sidebar .brand-link {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem 0.5rem;
+            border-bottom: 1px solid #4b545c;
+        }
+
+        .brand-image {
+            max-height: 40px !important;
+            width: auto !important;
+            object-fit: contain !important;
+            float: none !important;
+            margin-left: 0.5rem;
+            margin-right: 0.8rem;
+            opacity: 1 !important;
+            box-shadow: none !important;
+        }
+
+        .brand-text {
+            font-size: 1.1rem;
+            font-weight: 500 !important;
+            letter-spacing: 0.5px; 
+        }
+    </style>
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+    <div class="wrapper">
+
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light border-bottom-0 elevation-1">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+                </li>
+                <li class="nav-item d-none d-sm-inline-block">
+                    <span class="nav-link font-weight-bold" style="font-size: 1.1rem;">@companyName Ultimate HRMS</span>
+                </li>
+            </ul>
+
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item dropdown user-menu">
+                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
+                        <img src="~/theme/dist/img/user2-160x160.jpg" class="user-image img-circle elevation-2" alt="User Image">
+                        <span class="d-none d-md-inline">@currentUserName</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                        <li class="user-header bg-primary">
+                            <img src="~/theme/dist/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image">
+                            <p>
+                                @currentUserName - @roleName
+                                <small>Active System User</small>
+                            </p>
+                        </li>
+                        <li class="user-footer">
+                            <a href="@Url.Action("Index", "Company")" class="btn btn-default btn-flat">Profile</a>
+                            <a href="@Url.Action("Logout", "Account")" class="btn btn-default btn-flat float-right text-danger">Sign out</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+
+        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <a href="@Url.Action("Index", "Home")" class="brand-link">
+                <img src="@companyLogo" alt="Company Logo" class="brand-image">
+                <span class="brand-text">@companyName</span>
+            </a>
+
+            <div class="sidebar">
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column nav-flat nav-child-indent" data-widget="treeview" role="menu" data-accordion="false">
+
+                        <li class="nav-item">
+                            <a href="@Url.Action("Index", "Home")" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "")">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>Dashboard</p>
+                            </a>
+                        </li>
+
+                        @if (currentRoleId == 1)
+                        {
+                            <li class="nav-item">
+                                <a href="@Url.Action("Index", "Company")" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Company" ? "active" : "")">
+                                    <i class="nav-icon fas fa-building"></i>
+                                    <p>Company Profile</p>
+                                </a>
+                            </li>
+                        }
+
+                        @if (currentRoleId == 1 || currentRoleId == 2)
+                        {
+                            <li class="nav-header">OPERATIONS (HR)</li>
+
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-users"></i>
+                                    <p>Employees <i class="right fas fa-angle-left"></i></p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    <li class="nav-item"><a href="@Url.Action("Index", "Employees")" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Add Employee</p></a></li>
+                                </ul>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">  
+                                    <i class="nav-icon fas fa-clock"></i>
+                                    <p>Attendance <i class="right fas fa-angle-left"></i></p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    <li class="nav-item"><a href="@Url.Action("DailyAttendance", "Attendance")" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Daily Attendance</p></a></li>
+                                    <li class="nav-item"><a href="@Url.Action("ShiftRoster", "Attendance")" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Shift Roster</p></a></li>
+                                    <li class="nav-item"><a href="@Url.Action("ManualEntry", "Attendance")" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Manual Entry</p></a></li>
+                                    <li class="nav-item"><a href="@Url.Action("MonthlyReport", "Attendance")" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Monthly Report</p></a></li>
+                                </ul>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-calendar-check"></i>
+                                    <p>Leaves <i class="right fas fa-angle-left"></i></p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    <li class="nav-item"><a href="@Url.Action("Apply", "Leaves")" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Apply Leave</p></a></li>
+                                    <li class="nav-item"><a href="@Url.Action("LeaveRequests", "Leaves")" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Leave Requests</p></a></li>
+                                    <li class="nav-item"><a href="@Url.Action("LeaveBalance", "Leaves")" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Leave Balance</p></a></li>
+                                </ul>
+                            </li>
+
+                                <li class="nav-item">
+                                    <a href="@Url.Action("DocumentManagement", "Document")" class="nav-link">
+                                    <i class="nav-icon fas fa-folder-open"></i>
+                                        <p>Document Vaulat</p>
+                                    </a>
+                                </li>
+                            <li class="nav-item">
+                                <a href="@Url.Action("Index", "SupportTicket")" class="nav-link">
+                                    <i class="nav-icon fas fa-headset"></i>
+                                    <p>Support Tickets</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="@Url.Action("ResignationList", "ExitManagement")" class="nav-link">
+                                    <i class="nav-icon fas fa-user-minus text-danger"></i>
+                                    <p>
+                                        Resignation & Exit
+                                    </p>
+                                </a>
+                            </li>
+                        }
+
+                        @if (currentRoleId == 1 || currentRoleId == 3)
+                        {
+                            <li class="nav-header">FINANCE & PAYROLL</li>
+
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-money-bill-wave"></i>
+                                    <p>Payroll & Loans <i class="right fas fa-angle-left"></i></p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    <li class="nav-item"><a href="@Url.Action("SalaryStructure", "Payroll")" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Salary Structure</p></a></li>
+                                    <li class="nav-item"><a href="@Url.Action("EmployeeLoans", "Payroll")" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Loan Requests</p></a></li>
+                                    <li class="nav-item"><a href="@Url.Action("PayrollList", "Payroll")" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Process Payroll</p></a></li>
+                                </ul>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="@Url.Action("Index", "Expense")" class="nav-link">
+                                    <i class="nav-icon fas fa-receipt"></i>
+                                    <p>Expenses</p>
+                                </a>
+                            </li>
+                        }
+
+                        @if (currentRoleId == 1)
+                        {
+                            <li class="nav-header">ADMINISTRATION</li>
+
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-cogs"></i>
+                                    <p>Masters <i class="right fas fa-angle-left"></i></p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    <li class="nav-item"><a href="@Url.Action("Departments", "Masters")" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Departments</p></a></li>
+                                    <li class="nav-item"><a href="@Url.Action("Designations", "Masters")" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Designations</p></a></li>
+                                    <li class="nav-item"><a href="@Url.Action("Shifts", "Masters")" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Shift Master</p></a></li>
+                                    <li class="nav-item"><a href="@Url.Action("Holidays", "Masters")" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Holiday Calendar</p></a></li>
+                                    <li class="nav-item"><a href="@Url.Action("NoticeList", "Masters")" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Notice Board</p></a></li>
+                                    <li class="nav-item"><a href="@Url.Action("Banks", "Masters")" class="nav-link"><i class="far fa-circle nav-icon">icon</i><p>Bank Master</p></a></li>
+                                </ul>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-laptop"></i>
+                                    <p>Assets Management <i class="fas fa-angle-left right"></i></p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    <li class="nav-item"><a href="@Url.Action("Index", "Assets")" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Stock Inventory</p></a></li>
+                                    <li class="nav-item"><a href="@Url.Action("Allocations", "Assets")" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Issue & Return</p></a></li>
+                                </ul>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="@Url.Action("Index", "Statutory")" class="nav-link">
+                                    <i class="nav-icon fas fa-file-contract"></i>
+                                    <p>Statutory (PF/TDS)</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="@Url.Action("Index", "Reports")" class="nav-link">
+                                    <i class="nav-icon fas fa-chart-bar"></i>
+                                    <p>Reports</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="@Url.Action("Index", "User")" class="nav-link">
+                                    <i class="nav-icon fas fa-user-shield"></i>
+                                    <p>User & Roles</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="@Url.Action("Index", "Settings")" class="nav-link">
+                                    <i class="nav-icon fas fa-sliders-h"></i>
+                                    <p>Settings</p>
+                                </a>
+                            </li>
+                        }
+
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <div class="content-wrapper">
+            <section class="content-header pb-1">
+                <div class="container-fluid">
+                    <div class="row mb-1">
+                        <div class="col-sm-6">
+                            <h1 class="m-0" style="font-weight: 400;">@ViewData["Title"]</h1>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="content">
+                <div class="container-fluid">
+                    @RenderBody()
+                </div>
+            </section>
+        </div>
+
+        <footer class="main-footer text-sm">
+            <div class="float-right d-none d-sm-block">
+                <b>Version</b> 2.0.0 (Pro)
+            </div>
+            <strong>Copyright &copy; @DateTime.Now.Year <a href="#">@companyName</a>.</strong> All rights reserved.
+        </footer>
+
+    </div>
+
+    <script src="~/theme/plugins/jquery/jquery.min.js"></script>
+    <script src="~/theme/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/theme/dist/js/adminlte.min.js"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

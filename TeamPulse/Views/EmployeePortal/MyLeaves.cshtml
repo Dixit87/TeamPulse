@@ -1,0 +1,320 @@
+﻿@{
+    Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    ViewData["Title"] = "My Leaves & Balances";
+
+    // 🚀 NAYA LOGIC: Stats calculate karne ke liye
+    int pendingCount = 0;
+    int approvedCount = 0;
+    int rejectedCount = 0;
+
+    if (ViewBag.LeaveHistory != null)
+    {
+        foreach (var req in ViewBag.LeaveHistory)
+        {
+            if (req.Status == "Pending") pendingCount++;
+            else if (req.Status == "Approved") approvedCount++;
+            else if (req.Status == "Rejected") rejectedCount++;
+        }
+    }
+}
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap4.min.css">
+
+<style>
+    :root {
+        --dash-primary: #4361ee;
+        --dash-success: #2ec4b6;
+        --dash-warning: #ff9f1c;
+        --dash-danger: #e71d36;
+        --dash-info: #4cc9f0;
+        --bg-soft: #f8f9fc;
+    }
+
+    body {
+        background-color: var(--bg-soft);
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* Balance Cards */
+    .leave-card {
+        background: #fff;
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        padding: 20px;
+        transition: transform 0.2s ease;
+        height: 100%;
+    }
+
+        .leave-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .progress-custom {
+        height: 8px;
+        background-color: #e2e8f0;
+        border-radius: 10px;
+        margin-top: 12px;
+    }
+
+    /* Stats Widget */
+    .stat-item {
+        padding: 15px;
+        border-radius: 12px;
+        background: #f8f9fc;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 1px solid #f1f5f9;
+    }
+
+    /* Table Styling */
+    .table-custom {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        padding: 20px;
+    }
+
+        .table-custom thead th {
+            background-color: #f8f9fc;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .table-custom tbody td {
+            vertical-align: middle;
+            color: #334155;
+            font-weight: 500;
+            border-bottom: 1px solid #f1f5f9;
+            padding: 15px 10px;
+        }
+
+    .badge-status {
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    .page-item.active .page-link {
+        background-color: var(--dash-primary);
+        border-color: var(--dash-primary);
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h2 class="font-weight-bold text-dark mb-1">My Leaves</h2>
+            <p class="text-muted mb-0">Track your time-off balances and request history.</p>
+        </div>
+        <div class="col-md-6 text-md-right mt-3 mt-md-0">
+            <a href="@Url.Action("Apply", "Leaves")" class="btn btn-primary font-weight-bold px-4 py-2 shadow-sm" style="border-radius: 8px;">
+                <i class="fas fa-plus-circle mr-2"></i> Apply New Leave
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+
+        <div class="col-lg-8 mb-3 mb-lg-0">
+            <h5 class="font-weight-bold mb-3"><i class="fas fa-wallet text-primary mr-2"></i>Available Quota</h5>
+            <div class="row">
+                @if (ViewBag.LeaveBalances != null && ((IEnumerable<dynamic>)ViewBag.LeaveBalances).Any())
+                {
+                    var colors = new string[] { "dash-primary", "dash-success", "dash-warning", "dash-info" };
+                    int colorIndex = 0;
+
+                    foreach (var balance in ViewBag.LeaveBalances)
+                    {
+                        int available = balance.TotalQuota - balance.UsedLeaves;
+                        double percentUsed = balance.TotalQuota > 0 ? ((double)balance.UsedLeaves / balance.TotalQuota) * 100 : 0;
+                        string themeColor = colors[colorIndex % colors.Length];
+                        colorIndex++;
+
+                        <div class="col-md-6 mb-3">
+                            <div class="leave-card border border-light">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <h6 class="font-weight-bold text-dark mb-1">@balance.LeaveType.TypeName</h6>
+                                        <small class="text-muted">Used: @balance.UsedLeaves / @balance.TotalQuota</small>
+                                    </div>
+                                    <div class="text-right">
+                                        <h3 class="font-weight-bold mb-0" style="color: var(--@themeColor);">@available</h3>
+                                        <small class="text-muted font-weight-bold" style="font-size: 10px;">DAYS LEFT</small>
+                                    </div>
+                                </div>
+                                <div class="progress progress-custom">
+                                    <div class="progress-bar" style="width: @percentUsed%; background-color: var(--@themeColor);"></div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="col-12">
+                        <div class="leave-card text-center py-4 bg-light border-0">
+                            <i class="fas fa-box-open fa-2x text-muted mb-2 opacity-50"></i>
+                            <h6 class="font-weight-bold text-dark">No Leave Quota Assigned</h6>
+                            <p class="text-muted small mb-0">Your leave balances for this year have not been updated yet.</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <h5 class="font-weight-bold mb-3"><i class="fas fa-chart-pie text-success mr-2"></i>Request Overview</h5>
+            <div class="leave-card border border-light p-3">
+                <div class="stat-item border-left-warning" style="border-left: 4px solid var(--dash-warning);">
+                    <div>
+                        <span class="d-block font-weight-bold text-dark">Pending Approvals</span>
+                        <small class="text-muted">Awaiting HR action</small>
+                    </div>
+                    <h4 class="font-weight-bold text-warning mb-0">@pendingCount</h4>
+                </div>
+
+                <div class="stat-item border-left-success" style="border-left: 4px solid var(--dash-success);">
+                    <div>
+                        <span class="d-block font-weight-bold text-dark">Approved Leaves</span>
+                        <small class="text-muted">All time approved</small>
+                    </div>
+                    <h4 class="font-weight-bold text-success mb-0">@approvedCount</h4>
+                </div>
+
+                <div class="stat-item border-left-danger mb-0" style="border-left: 4px solid var(--dash-danger);">
+                    <div>
+                        <span class="d-block font-weight-bold text-dark">Rejected Requests</span>
+                        <small class="text-muted">Declined by HR</small>
+                    </div>
+                    <h4 class="font-weight-bold text-danger mb-0">@rejectedCount</h4>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <h5 class="font-weight-bold mb-3 mt-2"><i class="fas fa-history text-secondary mr-2"></i>Leave Request History</h5>
+
+    <div class="table-custom">
+        <div class="table-responsive">
+            <table id="leaveHistoryTable" class="table table-hover w-100 mb-0">
+                <thead>
+                    <tr>
+                        <th class="pl-3">Applied On</th>
+                        <th>Leave Period</th>
+                        <th>Leave Type</th>
+                        <th>Duration & Reason</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (ViewBag.LeaveHistory != null && ((IEnumerable<dynamic>)ViewBag.LeaveHistory).Any())
+                    {
+                        foreach (var req in ViewBag.LeaveHistory)
+                        {
+                            <tr>
+                                <td class="pl-3 font-weight-bold text-muted">
+                                    @req.AppliedDate.ToString("dd MMM yyyy")
+                                </td>
+
+                                <td>
+                                    <span class="text-dark font-weight-bold">@req.FromDate.ToString("dd MMM")</span>
+                                    <i class="fas fa-arrow-right text-muted mx-1" style="font-size: 10px;"></i>
+                                    <span class="text-dark font-weight-bold">@req.ToDate.ToString("dd MMM yyyy")</span>
+                                </td>
+
+                                <td>
+                                    <span class="badge badge-light border text-dark px-2 py-1">@req.LeaveType.TypeName</span>
+                                </td>
+
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span class="text-primary font-weight-bold mb-1"><i class="far fa-clock mr-1"></i> @req.TotalDays Days</span>
+                                        <small class="text-muted text-truncate" style="max-width: 200px;" title="@req.Reason">
+                                            @req.Reason
+                                        </small>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    @if (req.Status == "Approved")
+                                    {
+                                        <span class="badge badge-status bg-success"><i class="fas fa-check-circle mr-1"></i> Approved</span>
+                                    }
+                                    else if (req.Status == "Rejected")
+                                    {
+                                        <span class="badge badge-status bg-danger"><i class="fas fa-times-circle mr-1"></i> Rejected</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-status bg-warning text-white"><i class="fas fa-hourglass-half mr-1"></i> Pending</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+
+            @if (ViewBag.LeaveHistory == null || !((IEnumerable<dynamic>)ViewBag.LeaveHistory).Any())
+            {
+                <div class="text-center py-5">
+                    <p class="text-muted mb-0">You have not applied for any leaves yet.</p>
+                </div>
+            }
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap4.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            if ($('#leaveHistoryTable tbody tr').length > 0 && !$('#leaveHistoryTable tbody tr td').hasClass('dataTables_empty')) {
+                $('#leaveHistoryTable').DataTable({
+                    "pageLength": 10,
+                    "lengthChange": false,
+                    "ordering": false,
+                    "info": true,
+                    // 🚀 NAYA DOM: Search aur Buttons ko aur bhi khoobsurat layout me set kiya
+                    "dom": '<"row align-items-center mb-3"<"col-sm-6"B><"col-sm-6 text-right"f>>rt<"row align-items-center mt-3"<"col-sm-6"i><"col-sm-6 text-right"p>>',
+                    "buttons": [
+                        {
+                            extend: 'excelHtml5',
+                            text: '<i class="fas fa-file-excel mr-1"></i> Export Excel',
+                            className: 'btn btn-sm btn-success rounded font-weight-bold'
+                        },
+                        {
+                            extend: 'pdfHtml5',
+                            text: '<i class="fas fa-file-pdf mr-1"></i> Export PDF',
+                            className: 'btn btn-sm btn-danger rounded font-weight-bold ml-2'
+                        }
+                    ],
+                    "language": {
+                        "search": "",
+                        "searchPlaceholder": "Search leaves..."
+                    }
+                });
+
+                $('.dataTables_filter input').addClass('form-control form-control-sm').css({'border-radius':'8px', 'display':'inline-block', 'width':'auto'});
+            }
+        });
+    </script>
+}

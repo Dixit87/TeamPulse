@@ -1,0 +1,322 @@
+﻿@using Microsoft.AspNetCore.Http
+@{
+    Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    ViewData["Title"] = "Talent Dashboard";
+    string userName = Context.Session.GetString("UserName") ?? "Employee";
+}
+
+<style>
+    :root {
+        --dash-primary: #4361ee;
+        --dash-success: #2ec4b6;
+        --dash-warning: #ff9f1c;
+        --dash-danger: #e71d36;
+        --bg-soft: #f8f9fc;
+    }
+
+    body {
+        background-color: var(--bg-soft);
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* Welcome Banner */
+    .welcome-banner {
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        border-radius: 24px;
+        border: none;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Action Icon Shapes */
+    .icon-shape {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .bg-soft-primary {
+        background: #e0e7ff;
+        color: #4361ee;
+    }
+
+    .bg-soft-success {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .bg-soft-info {
+        background: #e0f2fe;
+        color: #0ea5e9;
+    }
+
+    .bg-soft-danger {
+        background: #fee2e2;
+        color: #ef4444;
+    }
+
+    .stat-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+        transition: 0.3s;
+        background: #fff;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .punch-clock {
+        font-size: 3rem;
+        font-weight: 800;
+        color: var(--dash-primary);
+        letter-spacing: -1px;
+    }
+
+    /* Leave Progress */
+    .leave-pill {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 10px;
+        border: 1px solid #f1f3f5;
+    }
+
+    .progress-custom {
+        height: 6px;
+        border-radius: 10px;
+        margin-top: 8px;
+    }
+
+    .notice-item {
+        background: #fff9f0;
+        border-left: 5px solid var(--dash-warning);
+        border-radius: 12px;
+        padding: 15px;
+    }
+
+    .payslip-item {
+        border: 1px solid #f1f1f1;
+        border-radius: 12px;
+        margin-bottom: 8px;
+        padding: 10px 15px;
+        transition: 0.2s;
+    }
+
+        .payslip-item:hover {
+            background: #f8f9fc;
+            border-color: var(--dash-primary);
+        }
+</style>
+
+<div class="container-fluid py-4">
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card welcome-banner text-white shadow-lg">
+                <div class="card-body p-5 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="badge badge-light mb-2 text-primary font-weight-bold px-3 py-2 rounded-pill">WORKSPACE OVERVIEW</span>
+                        <h1 class="font-weight-bold display-4">Hello, @userName! ✨</h1>
+                        <p class="lead opacity-75">Your productivity journey for today starts here.</p>
+                    </div>
+                    <div class="d-none d-lg-block">
+                        <img src="https://cdn-icons-png.flaticon.com/512/4140/4140037.png" style="width: 150px;" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <div class="card stat-card h-100 p-3">
+                <div class="card-header bg-transparent border-0 text-center pb-0">
+                    <h5 class="font-weight-bold text-dark mb-0">Shift Tracker</h5>
+                    <small class="text-muted">@DateTime.Now.ToString("dddd, MMM dd")</small>
+                </div>
+                @{
+                    // 🚀 C# variable me convert karein taaki condition pakki chale
+                    bool isPunched = (ViewBag.IsPunchedIn == true);
+                    bool isDone = (ViewBag.IsSessionCompleted == true);
+                }
+
+                <div class="card-body text-center d-flex flex-column justify-content-center">
+                    <div class="punch-clock mb-4" id="liveClock">00:00:00</div>
+
+                    @if (isDone)
+                    {
+                        @* --- SHIFT DONE --- *@
+                        <button class="btn btn-secondary btn-lg btn-block rounded-pill shadow font-weight-bold py-3" disabled>
+                            <i class="fas fa-check-circle mr-2"></i> SESSION COMPLETED
+                        </button>
+                        <p class="small text-success mt-3 mb-0 font-weight-bold">Work for today is recorded!</p>
+                    }
+                    else
+                    {
+                        @* --- START / STOP BUTTON --- *@
+                        <button id="punchBtn" onclick="handlePunch()"
+                                class="btn @(isPunched ? "btn-danger" : "btn-primary") btn-lg btn-block rounded-pill shadow font-weight-bold py-3">
+                            @if (isPunched)
+                            {
+                                <i class="fas fa-stop-circle mr-2"></i> 
+                                @("STOP WORK SESSION")
+                            }
+                            else
+                            {
+                                <i class="fas fa-fingerprint mr-2"></i> 
+                                @("START WORK SESSION")
+                            }
+                        </button>
+
+                        <p id="punchStatus" class="small text-muted mt-3 mb-0 font-weight-bold">
+                            @(isPunched ? "Punched In at: " + ViewBag.PunchInTime : "Ready to Start Session")
+                        </p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8 mb-4">
+            <h5 class="font-weight-bold mb-3">Quick Actions Center</h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <a href="@Url.Action("MyExpenses", "EmployeePortal")" class="text-decoration-none">
+                        <div class="card stat-card p-3 text-center">
+                            <div class="icon-shape bg-soft-success mx-auto mb-2"><i class="fas fa-receipt"></i></div>
+                            <span class="font-weight-bold text-dark d-block">My Expenses</span>
+                            <small class="text-muted">Claim Refund</small>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <a href="@Url.Action("MyTickets", "EmployeePortal")" class="text-decoration-none">
+                        <div class="card stat-card p-3 text-center">
+                            <div class="icon-shape bg-soft-info mx-auto mb-2"><i class="fas fa-headset"></i></div>
+                            <span class="font-weight-bold text-dark d-block">Helpdesk</span>
+                            <small class="text-muted">Raise Ticket</small>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <a href="@Url.Action("MyResignation", "EmployeePortal")" class="text-decoration-none">
+                        <div class="card stat-card p-3 text-center">
+                            <div class="icon-shape bg-soft-danger mx-auto mb-2"><i class="fas fa-door-open"></i></div>
+                            <span class="font-weight-bold text-dark d-block">Resignation</span>
+                            <small class="text-muted">Exit Process</small>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <div class="card stat-card mt-2">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <h5 class="font-weight-bold mb-0">Leave Quota Status</h5>
+                        <a href="@Url.Action("NoticeBoard", "EmployeePortal")" class="small font-weight-bold"><i class="fas fa-calendar-alt mr-1"></i> View Holiday Calendar</a>
+                    </div>
+                    <div class="row">
+                        @if (ViewBag.LeaveBalances != null)
+                        {
+                            foreach (var balance in ViewBag.LeaveBalances)
+                            {
+                                int available = balance.TotalQuota - balance.UsedLeaves;
+                                double percentUsed = balance.TotalQuota > 0 ? ((double)balance.UsedLeaves / balance.TotalQuota) * 100 : 0;
+
+                                <div class="col-md-4">
+                                    <div class="leave-pill">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="small font-weight-bold">@balance.LeaveType.TypeName</span>
+                                            <span class="text-primary font-weight-bold">@available Left</span>
+                                        </div>
+                                        <div class="progress progress-custom">
+                                            <div class="progress-bar bg-primary" style="width: @percentUsed%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card stat-card h-100 p-4">
+                <h5 class="font-weight-bold mb-3"><i class="fas fa-bullhorn text-warning mr-2"></i>Announcements</h5>
+                @if (ViewBag.UpcomingHoliday != null)
+                {
+                    <div class="notice-item shadow-sm">
+                        <div class="font-weight-bold">Upcoming: @ViewBag.UpcomingHoliday.HolidayName</div>
+                        <p class="small text-muted mb-0">Office closed on @ViewBag.UpcomingHoliday.HolidayDate.ToString("dd MMM, yyyy")</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="p-4 text-center border rounded bg-light">
+                        <p class="small text-muted mb-0">No immediate public holidays scheduled.</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card stat-card h-100 p-4">
+                <h5 class="font-weight-bold mb-3"><i class="fas fa-file-invoice-dollar text-success mr-2"></i>Recent Payslips</h5>
+                @if (ViewBag.RecentPayslips != null)
+                {
+                    foreach (var payslip in ViewBag.RecentPayslips)
+                    {
+                        string monthName = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(payslip.Month);
+                        <div class="payslip-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="d-block font-weight-bold">@monthName @payslip.Year</span>
+                                <small class="@(payslip.IsPaid ? "text-success" : "text-warning") font-weight-bold">@(payslip.IsPaid ? "Paid" : "Processing...")</small>
+                            </div>
+                            <button class="btn btn-sm btn-primary rounded-circle"><i class="fas fa-download fa-xs"></i></button>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // 🚀 1. AJAX PUNCH LOGIC (No Page Refresh)
+        function handlePunch() {
+            $.post('@Url.Action("WebPunch", "EmployeePortal")', function (data) {
+                if (data.success) {
+                    if (data.action == "In") {
+                        $("#punchBtn").removeClass("btn-primary").addClass("btn-danger")
+                                     .html('<i class="fas fa-stop-circle mr-2"></i> STOP WORK SESSION');
+                        $("#punchStatus").text("Punched In at: " + data.time);
+                    }
+                    else if (data.action == "Out") {
+                        $("#punchBtn").prop("disabled", true).removeClass("btn-danger").addClass("btn-secondary")
+                                     .text("SESSION COMPLETED");
+                        $("#punchStatus").text("Punched Out at: " + data.time);
+                    }
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+
+        // 🚀 2. LIVE CLOCK
+        setInterval(function() {
+            var now = new Date();
+            $("#liveClock").text(now.getHours().toString().padStart(2, '0') + ":" +
+                                 now.getMinutes().toString().padStart(2, '0') + ":" +
+                                 now.getSeconds().toString().padStart(2, '0'));
+        }, 1000);
+    </script>
+}

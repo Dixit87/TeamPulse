@@ -1,0 +1,135 @@
+﻿@using Microsoft.AspNetCore.Http
+@{
+    // Company Logo aur Name database se laane ka logic yahan bhi daal sakte hain
+    string companyName = "TeamPulse HRMS";
+    string currentUserName = Context.Session.GetString("UserName") ?? "Employee";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@ViewData["Title"] | Employee Portal</title>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <link rel="stylesheet" href="~/theme/plugins/fontawesome-free/css/all.min.css">
+    <link rel="stylesheet" href="~/theme/dist/css/adminlte.min.css">
+
+    <style>
+        body {
+            background-color: #f4f6f9;
+        }
+        /* Clean Top Navbar Styling */
+        .navbar-light .navbar-nav .nav-link {
+            color: #333;
+            font-weight: 500;
+        }
+
+            .navbar-light .navbar-nav .nav-link:hover {
+                color: #0d6efd;
+            }
+
+        .content-wrapper {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body class="hold-transition layout-top-nav">
+    <div class="wrapper">
+        <nav class="main-header navbar navbar-expand-md navbar-light navbar-white shadow-sm">
+            <div class="container-fluid px-4">
+                <a href="@Url.Action("Dashboard", "EmployeePortal")" class="navbar-brand">
+                    <i class="fas fa-heartbeat text-primary mr-2"></i>
+                    <span class="brand-text font-weight-bold">@companyName</span>
+                </a>
+
+                <button class="navbar-toggler order-1" type="button" data-toggle="collapse" data-target="#navbarCollapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse order-3" id="navbarCollapse">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a href="@Url.Action("Dashboard", "EmployeePortal")" class="nav-link"><i class="fas fa-home mr-1"></i> Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="@Url.Action("MyAttendance","EmployeePortal")" class="nav-link"><i class="fas fa-calendar-alt mr-1"></i> My Attendance</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="@Url.Action("MyLeaves", "EmployeePortal")" class="nav-link"><i class="fas fa-plane-departure mr-1"></i> Leaves</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="@Url.Action("MyPayslips", "EmployeePortal")" class="nav-link"><i class="fas fa-file-invoice-dollar mr-1"></i> Payslips</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="@Url.Action("MyAssets", "EmployeePortal")" class="nav-link"><i class="fas fa-laptop mr-1"></i> My Assets</a>   
+                        </li>
+                        <li>
+                            <a href="@Url.Action("MyLoans", "EmployeePortal")" class="nav-link"><i class="fas fa-users mr-1"></i> My Loans</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="@Url.Action("MyDocuments", "EmployeePortal")" class="nav-link">
+                                <i class="nav-icon fas fa-folder-open"></i> My Documents </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="@Url.Action("MyExpenses", "EmployeePortal")" class="nav-link">
+                                <i class="nav-icon fas fa-wallet"></i> My Expenses
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="@Url.Action("NoticeBoard", "EmployeePortal")" class="nav-link">
+                                <i class="nav-icon fas fa-bullhorn"></i> Notice Board
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="@Url.Action("MyTickets", "EmployeePortal")" class="nav-link"><i class="nav-icon fas fa-headset"></i>Helpdesk</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="@Url.Action("MyResignation", "EmployeePortal")" class="nav-link"><i class="nav-icon fas fa-sign-out-alt text-danger"></i>Resignation</a>
+                        </li>
+                        
+                    </ul>
+                </div>
+
+                <ul class="order-1 order-md-3 navbar-nav navbar-no-expand ml-auto">
+                    <li class="nav-item dropdown user-menu">
+                        <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
+                            <img src="~/theme/dist/img/avatar5.png" class="user-image img-circle elevation-1" alt="User Image">
+                            <span class="d-none d-md-inline font-weight-bold">@currentUserName</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right shadow border-0">
+                            <li class="user-header bg-primary">
+                                <img src="~/theme/dist/img/avatar5.png" class="img-circle elevation-2" alt="User Image">
+                                <p>
+                                    @currentUserName
+                                    <small>Employee Portal Access</small>
+                                </p>
+                            </li>   
+                            <li class="user-footer">
+                                <a href="@Url.Action("MyProfile", "EmployeePortal")" class="btn btn-default btn-flat rounded">My Profile</a>
+                                <a href="@Url.Action("Logout", "Account")" class="btn btn-danger btn-flat float-right rounded">Sign out</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <div class="content-wrapper">
+            <div class="container-fluid px-4 mt-4">
+                @RenderBody()
+            </div>
+        </div>
+
+        <footer class="main-footer text-center">
+            <strong>Copyright &copy; @DateTime.Now.Year <a href="#">@companyName</a>.</strong> All rights reserved.
+        </footer>
+    </div>
+    <script src="~/theme/plugins/jquery/jquery.min.js"></script>
+    <script src="~/theme/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/theme/dist/js/adminlte.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

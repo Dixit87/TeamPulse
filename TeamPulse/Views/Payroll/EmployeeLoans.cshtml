@@ -1,0 +1,324 @@
+﻿@model IEnumerable<TeamPulse.Models.TblLoan>
+@{
+    ViewData["Title"] = "Loan Management";
+}
+
+<style>
+    .loan-stat-card {
+        border-radius: 15px;
+        border: none;
+        transition: 0.3s;
+    }
+
+        .loan-stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .table-modern {
+        background: white;
+        border-radius: 12px;
+        overflow: visible !important;
+    }
+
+        .table-modern thead th {
+            background-color: #f8fafc;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+            border: none;
+        }
+
+    .progress-sm {
+        height: 6px;
+        border-radius: 10px;
+    }
+
+    .status-badge {
+        border-radius: 20px;
+        padding: 5px 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .input-group-custom {
+        border-radius: 8px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+    }
+
+    .table-responsive {
+        overflow: visible !important;
+    }
+
+    .dropdown-menu {
+        position: absolute !important;
+        z-index: 1050 !important; /* बूस्ट्रैप का स्टैंडर्ड जेड-इंडेक्स */
+    }
+</style>
+
+<section class="content-header py-4">
+    <div class="container-fluid">
+        <div class="row align-items-center mb-4">
+            <div class="col-md-6">
+                <h2 class="font-weight-bold mb-1">Financial Assistance</h2>
+                <p class="text-muted">Monitor employee loans, EMIs, and recovery status</p>
+            </div>
+            <div class="col-md-6 text-right">
+                <button class="btn btn-dark shadow-sm rounded-pill px-4 py-2" data-toggle="modal" data-target="#loanModal">
+                    <i class="fas fa-hand-holding-usd mr-2 text-warning"></i> New Loan Sanction
+                </button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card loan-stat-card bg-primary text-white shadow">
+                    <div class="card-body">
+                        <small class="text-uppercase opacity-75">Total Disbursed</small>
+                        <h3 class="font-weight-bold">₹ @Model.Where(x => x.Status == "Active" || x.Status == "Settled").Sum(x => x.LoanAmount).ToString("N0")</h3>
+                        <i class="fas fa-chart-line float-right opacity-25 fa-2x" style="margin-top: -30px;"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card loan-stat-card bg-white shadow-sm">
+                    <div class="card-body">
+                        <small class="text-uppercase text-muted">Outstanding Balance</small>
+                        <h3 class="font-weight-bold text-danger">₹ @Model.Where(x => x.Status == "Active").Sum(x => x.BalanceAmount ?? 0).ToString("N0")</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card loan-stat-card bg-white shadow-sm border-left border-success">
+                    <div class="card-body">
+                        <small class="text-uppercase text-muted">Recovery Rate</small>
+                        <h3 class="font-weight-bold text-success">
+                            @{
+                                var total = Model.Where(x => x.Status == "Active" || x.Status == "Settled").Sum(x => x.LoanAmount);
+                                var recovered = total - Model.Where(x => x.Status == "Active").Sum(x => (x.BalanceAmount ?? 0));
+                                var rate = total > 0 ? (recovered / total) * 100 : 0;
+                            }
+                            @rate.ToString("0")%
+                        </h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="card border-0 shadow-sm table-modern">
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th class="pl-4">Employee & Date</th>
+                            <th>Principal Amount</th>
+                            <th>EMI Details</th>
+                            <th>Repayment Progress</th>
+                            <th>Status</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            @* 🚀 logic: Kitna paisa diya ja chuka hai aur percentage calculation *@
+                            decimal paidAmount = item.LoanAmount - (item.BalanceAmount ?? 0);
+
+                            @* Precision fix ke liye 100.0m ka use karein *@
+                            decimal progress = item.LoanAmount > 0 ? (paidAmount / item.LoanAmount) * 100.0m : 0;
+
+                            <tr>
+                                <td class="pl-4">
+                                    <div class="font-weight-bold">@item.Employee.FirstName @item.Employee.LastName</div>
+                                    <small class="text-muted"><i class="far fa-calendar-alt"></i> @item.SanctionDate?.ToString("dd MMM yyyy")</small>
+                                </td>
+                                <td>
+                                    <span class="font-weight-bold">₹ @item.LoanAmount.ToString("N0")</span>
+                                </td>
+                                <td>
+                                    <div class="text-danger font-weight-bold">₹ @item.Emiamount.ToString("N0") <small>/mo</small></div>
+                                    <small class="text-muted">Tenure: @item.Months Months</small>
+                                </td>
+                                <td style="width: 250px;">
+                                    @if (item.Status == "Active" || item.Status == "Settled")
+                                    {
+                                        <div class="d-flex justify-content-between mb-1">
+                                            @* Kitna balance baki hai *@
+                                            <small class="font-weight-bold text-primary">₹ @((item.BalanceAmount ?? 0).ToString("N0")) Left</small>
+                                            @* Dynamic Percentage *@
+                                            <small class="text-muted">@progress.ToString("0")%</small>
+                                        </div>
+                                        <div class="progress progress-sm" style="height: 6px; border-radius: 10px; background-color: #e9ecef;">
+                                            @* 🚀 Progress Bar ki width ab dynamic hai *@
+                                            <div class="progress-bar bg-primary shadow-sm"
+                                                 role="progressbar"
+                                                 style="width: @progress%; border-radius: 10px;"
+                                                 aria-valuenow="@progress"
+                                                 aria-valuemin="0"
+                                                 aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <small class="text-muted"><i class="fas fa-info-circle mr-1"></i> Will start after approval</small>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.Status == "Active")
+                                    {
+                                        <span class="status-badge bg-info text-white"><i class="fas fa-sync-alt fa-spin mr-1"></i> Active EMI</span>
+                                    }
+                                    else if (item.Status == "Settled")
+                                    {
+                                        <span class="status-badge bg-success text-white"><i class="fas fa-check-double mr-1"></i> Settled</span>
+                                    }
+                                    else if (item.Status == "Pending")
+                                    {
+                                        <span class="status-badge bg-warning text-dark"><i class="fas fa-hourglass-half mr-1"></i> Pending</span>
+                                    }
+                                    else if (item.Status == "Rejected")
+                                    {
+                                        <span class="status-badge bg-danger text-white"><i class="fas fa-times-circle mr-1"></i> Rejected</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <div class="dropdown">
+                                        <button class="btn btn-light btn-sm rounded-circle shadow-sm" data-toggle="dropdown">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+
+                                        <div class="dropdown-menu dropdown-menu-right shadow border-0">
+                                            @if (item.Status == "Pending")
+                                            {
+                                                <a class="dropdown-item text-success font-weight-bold" href="@Url.Action("ApproveLoanReq", "Payroll", new { id = item.LoanId })" onclick="return confirm('Approve this loan request?')">
+                                                    <i class="fas fa-check-circle mr-2"></i> Approve Request
+                                                </a>
+                                                <a class="dropdown-item text-danger font-weight-bold" href="@Url.Action("RejectLoanReq", "Payroll", new { id = item.LoanId })" onclick="return confirm('Reject this loan request?')">
+                                                    <i class="fas fa-times-circle mr-2"></i> Reject Request
+                                                </a>
+                                            }
+                                            else if (item.Status == "Active")
+                                            {
+                                                @* 🚀 Ledger dekhne ka button (Future Feature) *@
+                                                <a class="dropdown-item font-weight-bold" href="javascript:void(0)" onclick="viewLedger(@item.LoanId)">
+                                                    <i class="fas fa-history mr-2 text-primary"></i> View Ledger
+                                                </a>
+
+                                                <a class="dropdown-item text-success font-weight-bold" href="@Url.Action("CloseLoan", "Payroll", new { id = item.LoanId })" onclick="return confirm('Settle full balance for this employee?')">
+                                                    <i class="fas fa-check-double mr-2"></i> Mark as Settled
+                                                </a>
+                                            }
+                                            <div class="dropdown-divider"></div>
+                                            <a class="dropdown-item" href="@Url.Action("DownloadStatement", "Payroll", new { id = item.LoanId })" target="_blank">
+                                                <i class="fas fa-print mr-2"></i> Download Statement
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="loanModal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title font-weight-bold">Sanction Assistance</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            </div>
+            <form asp-action="SaveLoan" method="post">
+                <div class="modal-body p-4">
+                    <div class="form-group mb-4">
+                        <label class="small font-weight-bold text-uppercase">Employee Information</label>
+                        <select name="EmployeeID" class="form-control form-control-lg border-primary" asp-items="ViewBag.Employees" required>
+                            <option value="">Search Employee...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label class="small font-weight-bold text-uppercase">Sanction Date</label>
+                        <input type="date" name="SanctionDate" class="form-control form-control-lg" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="small font-weight-bold text-uppercase">Loan Amount</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend"><span class="input-group-text bg-white">₹</span></div>
+                                    <input type="number" name="LoanAmount" id="amt" class="form-control form-control-lg" required onkeyup="calcEMI()" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="small font-weight-bold text-uppercase">Tenure (Months)</label>
+                                <input type="number" name="Months" id="mon" class="form-control form-control-lg" required onkeyup="calcEMI()" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-light rounded p-3 text-center my-4 border">
+                        <span class="text-muted small d-block">Monthly Deduction (EMI)</span>
+                        <h2 class="text-primary font-weight-bold mb-0" id="emiDisplay">₹ 0.00</h2>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="small font-weight-bold text-uppercase">Internal Note</label>
+                        <textarea name="Reason" class="form-control" rows="2" placeholder="Reason for loan..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="submit" class="btn btn-primary btn-block btn-lg shadow">Confirm & Disburse Loan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="ledgerModal" tabindex="-1">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-history mr-2"></i> Loan Repayment Ledger</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body" id="ledgerContent">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function calcEMI() {
+        var amount = parseFloat(document.getElementById('amt').value) || 0;
+        var months = parseFloat(document.getElementById('mon').value) || 1;
+        var emi = amount / months;
+        document.getElementById('emiDisplay').innerText = "₹ " + emi.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    }
+
+        function viewLedger(loanId) {
+        $.get('/Payroll/GetLoanLedger/' + loanId, function(data) {
+            // Modal me table load karein jo tbl_LoanRepayments se data laye
+            $('#ledgerBody').html(data);
+            $('#ledgerModal').modal('show');
+        });
+    }
+        function viewLedger(loanId) {
+        $("#ledgerContent").html('<div class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i></div>');
+        $("#ledgerModal").modal('show');
+
+        $.get('@Url.Action("GetLoanLedger", "Payroll")/' + loanId, function(data) {
+            $("#ledgerContent").html(data);
+        });
+    }
+</script>

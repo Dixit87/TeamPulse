@@ -1,0 +1,274 @@
+﻿@{
+    Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    ViewData["Title"] = "My Payslips & Financials";
+
+    // Format currency to Indian Rupees (₹)
+    System.Globalization.CultureInfo indianCulture = new System.Globalization.CultureInfo("hi-IN");
+
+    decimal ytdEarnings = ViewBag.YtdEarnings ?? 0;
+    decimal ytdDeductions = ViewBag.YtdDeductions ?? 0;
+    decimal lastNetPay = ViewBag.LastNetPay ?? 0;
+}
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap4.min.css">
+
+<style>
+    :root {
+        --dash-primary: #4361ee;
+        --dash-success: #2ec4b6;
+        --dash-warning: #ff9f1c;
+        --dash-danger: #e71d36;
+        --dash-info: #4cc9f0;
+        --bg-soft: #f8f9fc;
+    }
+
+    body {
+        background-color: var(--bg-soft);
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* Financial Cards */
+    .finance-card {
+        background: #fff;
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        padding: 24px;
+        transition: transform 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .finance-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .finance-icon {
+        position: absolute;
+        right: -10px;
+        bottom: -20px;
+        font-size: 6rem;
+        opacity: 0.05;
+        transform: rotate(-15deg);
+    }
+
+    /* Table Styling */
+    .table-custom {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        padding: 20px;
+    }
+
+        .table-custom thead th {
+            background-color: #f8f9fc;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .table-custom tbody td {
+            vertical-align: middle;
+            color: #334155;
+            font-weight: 500;
+            border-bottom: 1px solid #f1f5f9;
+            padding: 15px 10px;
+        }
+
+    .badge-status {
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    .btn-download {
+        background-color: rgba(67, 97, 238, 0.1);
+        color: var(--dash-primary);
+        border: none;
+        font-weight: 600;
+        border-radius: 8px;
+        padding: 6px 15px;
+        transition: all 0.2s;
+    }
+
+        .btn-download:hover {
+            background-color: var(--dash-primary);
+            color: #fff;
+        }
+
+    .page-item.active .page-link {
+        background-color: var(--dash-primary);
+        border-color: var(--dash-primary);
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h2 class="font-weight-bold text-dark mb-1">My Payslips</h2>
+            <p class="text-muted mb-0">View your salary statements and tax deductions for <strong class="text-primary">@DateTime.Now.Year</strong></p>
+        </div>
+        <div class="col-md-4 text-md-right mt-3 mt-md-0">
+            <button class="btn btn-light border font-weight-bold shadow-sm rounded-pill px-4">
+                <i class="fas fa-question-circle text-primary mr-1"></i> Tax Declaration
+            </button>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-lg-4 col-md-6 mb-3 mb-lg-0">
+            <div class="finance-card border-top" style="border-top: 4px solid var(--dash-success) !important;">
+                <i class="fas fa-coins finance-icon text-success"></i>
+                <h6 class="text-uppercase text-muted font-weight-bold mb-1">YTD Earnings (@DateTime.Now.Year)</h6>
+                <h2 class="font-weight-bold text-dark mb-0">@ytdEarnings.ToString("C", indianCulture)</h2>
+                <small class="text-success font-weight-bold"><i class="fas fa-arrow-up mr-1"></i> Total Gross Income</small>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-3 mb-lg-0">
+            <div class="finance-card border-top" style="border-top: 4px solid var(--dash-danger) !important;">
+                <i class="fas fa-hand-holding-usd finance-icon text-danger"></i>
+                <h6 class="text-uppercase text-muted font-weight-bold mb-1">YTD Deductions (@DateTime.Now.Year)</h6>
+                <h2 class="font-weight-bold text-dark mb-0">@ytdDeductions.ToString("C", indianCulture)</h2>
+                <small class="text-danger font-weight-bold"><i class="fas fa-arrow-down mr-1"></i> Taxes, PF & Loans</small>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-12">
+            <div class="finance-card border-top bg-primary text-white shadow-lg" style="border-top: 4px solid #fff !important;">
+                <i class="fas fa-wallet finance-icon text-white" style="opacity: 0.2;"></i>
+                <h6 class="text-uppercase text-white-50 font-weight-bold mb-1">Last Net Pay</h6>
+                <h2 class="font-weight-bold text-white mb-0">@lastNetPay.ToString("C", indianCulture)</h2>
+                <small class="text-white font-weight-bold"><i class="fas fa-check-circle mr-1"></i> Credited to Bank</small>
+            </div>
+        </div>
+    </div>
+
+    <h5 class="font-weight-bold mb-3 mt-2"><i class="fas fa-file-invoice-dollar text-secondary mr-2"></i>Salary Statements History</h5>
+
+    <div class="table-custom">
+        <div class="table-responsive">
+            <table id="payslipsTable" class="table table-hover w-100 mb-0">
+                <thead>
+                    <tr>
+                        <th class="pl-3">Salary Month</th>
+                        <th>Working Days</th>
+                        <th>Gross Earnings</th>
+                        <th>Deductions</th>
+                        <th>Net Payable</th>
+                        <th>Status</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (ViewBag.Payslips != null && ((IEnumerable<dynamic>)ViewBag.Payslips).Any())
+                    {
+                        foreach (var slip in ViewBag.Payslips)
+                        {
+                            string monthName = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(slip.Month);
+                            decimal gross = slip.TotalGross ?? 0;
+                            decimal deductions = slip.TotalDeductions ?? 0;
+                            decimal netPay = slip.NetSalary ?? 0;
+
+                            <tr>
+                                <td class="pl-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-light rounded p-2 mr-3 text-center border" style="width: 50px;">
+                                            <span class="d-block font-weight-bold text-dark" style="font-size: 1.1rem; line-height: 1;">@slip.Month.ToString("00")</span>
+                                            <small class="text-muted" style="font-size: 0.7rem;">@slip.Year</small>
+                                        </div>
+                                        <div>
+                                            <h6 class="font-weight-bold text-dark mb-0">@monthName @slip.Year</h6>
+                                            <small class="text-muted">Payroll Processed</small>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <span class="font-weight-bold text-dark">@slip.PaidLeaveDays <small class="text-muted font-weight-normal">Days</small></span>
+                                </td>
+
+                                <td class="text-success font-weight-bold">
+                                    @gross.ToString("C", indianCulture)
+                                </td>
+
+                                <td class="text-danger font-weight-bold">
+                                    -@deductions.ToString("C", indianCulture)
+                                </td>
+
+                                <td>
+                                    <h6 class="font-weight-bold text-primary mb-0">@netPay.ToString("C", indianCulture)</h6>
+                                </td>
+
+                                <td>
+                                    @if (slip.IsPaid == true)
+                                    {
+                                        <span class="badge badge-status bg-success"><i class="fas fa-check-circle mr-1"></i> Paid</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-status bg-warning text-white"><i class="fas fa-cog fa-spin mr-1"></i> Processing</span>
+                                    }
+                                </td>
+
+                                <td class="text-center">
+                                    @if (slip.IsPaid == true)
+                                    {
+                                        <button class="btn btn-download btn-sm">
+                                            <i class="fas fa-download mr-1"></i> Payslip
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small"><i class="fas fa-lock mr-1"></i> Locked</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+
+            @if (ViewBag.Payslips == null || !((IEnumerable<dynamic>)ViewBag.Payslips).Any())
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-file-invoice-dollar fa-3x text-muted mb-3 opacity-25"></i>
+                    <h5 class="font-weight-bold text-dark">No Payslips Found</h5>
+                    <p class="text-muted mb-0">You don't have any generated salary statements yet.</p>
+                </div>
+            }
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            if ($('#payslipsTable tbody tr').length > 0 && !$('#payslipsTable tbody tr td').hasClass('dataTables_empty')) {
+                $('#payslipsTable').DataTable({
+                    "pageLength": 12, // Ek saal ke 12 mahine ek page pe
+                    "lengthChange": false,
+                    "ordering": false,
+                    "info": true,
+                    "dom": '<"row align-items-center mb-3"<"col-sm-6"><"col-sm-6 text-right"f>>rt<"row align-items-center mt-3"<"col-sm-6"i><"col-sm-6 text-right"p>>',
+                    "language": {
+                        "search": "",
+                        "searchPlaceholder": "Search by month/year..."
+                    }
+                });
+
+                $('.dataTables_filter input').addClass('form-control form-control-sm').css({'border-radius':'8px', 'display':'inline-block', 'width':'auto'});
+            }
+        });
+    </script>
+}

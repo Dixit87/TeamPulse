@@ -1,0 +1,87 @@
+﻿@model IEnumerable<TeamPulse.Models.TblResignation>
+@{
+    ViewData["Title"] = "Exit Management";
+}
+
+<div class="content-header py-4">
+    <div class="container-fluid">
+        <h2 class="font-weight-bold text-dark"><i class="fas fa-user-slash text-danger mr-2"></i>Exit & Separation</h2>
+        <p class="text-muted">Review and manage employee resignation requests</p>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="card shadow-sm border-0" style="border-radius: 15px;">
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="pl-4">Employee</th>
+                            <th>LWD (Notice End)</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="pl-4">
+                                    <div class="font-weight-bold">@item.Employee?.FirstName @item.Employee?.LastName</div>
+                                    <small class="text-muted">Applied: @item.ResignDate.ToString("dd MMM yyyy")</small>
+                                </td>
+                                <td>
+                                    <div class="text-danger font-weight-bold">@item.LastWorkingDay.ToString("dd MMM yyyy")</div>
+                                    <small class="text-muted">@( (item.LastWorkingDay - DateTime.Now).Days ) days left</small>
+                                </td>
+                                <td><small>@item.Reason</small></td>
+                                <td>
+                                    <span class="badge @(item.Status == "Pending" ? "badge-warning" : "badge-success")">@item.Status</span>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-dark rounded-pill px-3" onclick="openResignModal(@item.ResignId)">
+                                        Review
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="resignModal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius:15px;">
+            <form asp-action="UpdateResignStatus" method="post">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="id" id="resId" />
+                    <h5 class="font-weight-bold mb-3 text-center">Process Separation</h5>
+                    <div class="form-group">
+                        <label class="small font-weight-bold">Decision</label>
+                        <select name="status" class="form-control">
+                            <option value="Approved">Approve Resignation</option>
+                            <option value="Rejected">Reject / Retain Employee</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="small font-weight-bold">HR Remarks</label>
+                        <textarea name="remarks" class="form-control" rows="3" placeholder="Closing feedback..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-danger btn-block font-weight-bold">Update Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openResignModal(id) {
+        $('#resId').val(id);
+        $('#resignModal').modal('show');
+    }
+</script>

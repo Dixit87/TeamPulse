@@ -1,0 +1,153 @@
+﻿@model IEnumerable<TeamPulse.Models.TblTicket>
+@{
+    ViewData["Title"] = "Support Management";
+}
+
+<style>
+    .admin-ticket-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        background: #fff;
+    }
+
+    .badge-status {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+
+    .bg-open {
+        background: #fff7ed;
+        color: #c2410c;
+        border: 1px solid #ffedd5;
+    }
+
+    .bg-resolved {
+        background: #f0fdf4;
+        color: #15803d;
+        border: 1px solid #dcfce7;
+    }
+</style>
+
+<div class="content-header py-4">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="font-weight-bold text-dark mb-0">Ticket Command Center</h2>
+                <p class="text-muted small">Manage and resolve employee technical or HR issues</p>
+            </div>
+            <div class="text-right">
+                <span class="badge badge-pill badge-warning px-3 py-2">Open: @Model.Count(t => t.Status == "Open")</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="card admin-ticket-card">
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr class="text-uppercase small text-muted">
+                            <th class="pl-4">ID & Employee</th>
+                            <th>Issue Detail</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="pl-4">
+                                    <div class="font-weight-bold text-primary">#@item.TicketId</div>
+                                    <div class="text-dark font-weight-bold">@item.Employee?.FirstName</div>
+                                    <div class="small text-muted">@item.CreatedAt.ToString("dd MMM, hh:mm tt")</div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-light border mb-1" style="font-size: 10px;">@item.Category</span>
+                                    <div class="font-weight-bold">@item.Subject</div>
+                                    <div class="small text-muted">@item.Description</div>
+                                </td>
+                                <td>
+                                    @if (item.Priority == "High")
+                                    {
+                                        <span class="text-danger font-weight-bold"><i class="fas fa-exclamation-triangle mr-1"></i>High</span>
+                                    }
+                                    else
+                                    {
+
+                                        <span class="text-muted">@item.Priority</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge-status @(item.Status == "Open" ? "bg-open" : "bg-resolved")">
+                                        @item.Status
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3 mr-2"
+                                                onclick="openStatusModal(@item.TicketId, '@item.Status')">
+                                            <i class="fas fa-cog mr-1"></i> Manage
+                                        </button>
+
+                                        @if (!string.IsNullOrEmpty(item.Attachment))
+                                        {
+                                            <a href="~/uploads/tickets/@item.Attachment" target="_blank" class="btn btn-sm btn-light border rounded-circle">
+                                                <i class="fas fa-paperclip"></i>
+                                            </a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content shadow-lg" style="border-radius: 20px; border: none;">
+            <div class="modal-header border-0 pb-0">
+                <h6 class="font-weight-bold mb-0">Update Ticket Status</h6>
+                <button class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <form asp-action="UpdateStatus" asp-controller="SupportTicket" method="post">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="id" id="modalTicketId" />
+
+                    <div class="form-group">
+                        <label class="small font-weight-bold text-muted">CHOOSE NEW STATUS</label>
+                        <select name="status" id="modalStatusSelect" class="form-control" style="border-radius: 10px; background: #f8fafc;">
+                            <option value="Open">Open (Still Pending)</option>
+                            <option value="In-Progress">In-Progress</option>
+                            <option value="Resolved">Resolved (Completed)</option>
+                            <option value="Closed">Closed</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="submit" class="btn btn-primary btn-block font-weight-bold" style="border-radius: 12px;">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openStatusModal(id, currentStatus) {
+            $('#modalTicketId').val(id);
+            $('#modalStatusSelect').val(currentStatus);
+            $('#statusModal').modal('show');
+        }
+    </script>
+}

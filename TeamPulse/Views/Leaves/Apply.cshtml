@@ -1,0 +1,292 @@
+﻿@using Microsoft.AspNetCore.Http
+@model TeamPulse.Models.TblLeaveRequest
+@{
+    ViewData["Title"] = "Apply Leave";
+
+    // 1. Session se Role aur Name nikal rahe hain
+    int? roleId = Context.Session.GetInt32("RoleID") ?? 4;
+    string userName = Context.Session.GetString("UserName") ?? "Employee";
+
+    // 2. 🚀 MAGIC LAYOUT: Role ke hisab se layout change!
+    if (roleId == 1 || roleId == 2 || roleId == 3)
+    {
+        Layout = "~/Views/Shared/_Layout.cshtml"; // Admin / HR / Accountant ke liye
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_EmployeeLayout.cshtml"; // Employee ke liye naya layout
+    }
+}
+
+<style>
+    .card-modern {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        transition: transform 0.2s;
+    }
+
+    .form-label-custom {
+        font-weight: 600;
+        color: #344767;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control-lg-custom {
+        height: 48px;
+        border-radius: 8px;
+        border: 1px solid #e2e5e8;
+        font-size: 0.95rem;
+    }
+
+        .form-control-lg-custom:focus {
+            border-color: #5e72e4;
+            box-shadow: 0 0 0 3px rgba(94, 114, 228, 0.15);
+        }
+
+    .balance-card {
+        background: linear-gradient(135deg, #5e72e4 0%, #825ee4 100%);
+        color: white;
+        border-radius: 12px;
+    }
+
+    .info-icon {
+        background: rgba(255,255,255,0.2);
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+
+    .total-days-badge {
+        background-color: #f6f9fc;
+        color: #5e72e4;
+        font-weight: bold;
+        padding: 10px 15px;
+        border-radius: 8px;
+        display: inline-block;
+        border: 1px dashed #5e72e4;
+    }
+</style>
+
+<section class="content-header pt-4 pb-3">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-sm-6">
+                <h2 class="font-weight-bold text-dark">Apply for Leave</h2>
+                <p class="text-muted mb-0">Manage your time off requests efficiently.</p>
+            </div>
+            <div class="col-sm-6 text-right">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb bg-transparent float-sm-right p-0 mb-0">
+                        <li class="breadcrumb-item"><a href="#">Home</a></li>
+                        <li class="breadcrumb-item"><a href="#">Leave Management</a></li>
+                        <li class="breadcrumb-item active">Apply</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger border-0 shadow-sm rounded-lg fade show">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-circle fa-lg mr-3"></i>
+                    <span>@TempData["Error"]</span>
+                </div>
+                <button class="close" data-dismiss="alert">&times;</button>
+            </div>
+        }
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card card-modern bg-white mb-4">
+                    <div class="card-header bg-white border-bottom-0 pt-4 px-4 pb-0">
+                        <h5 class="font-weight-bold text-dark mb-0">
+                            <i class="fas fa-pen-nib text-primary mr-2"></i> Request Details
+                        </h5>
+                    </div>
+
+                    <form asp-action="Apply" method="post" enctype="multipart/form-data">
+                        <div class="card-body p-4">
+                            <div class="row">
+
+                                @if (roleId == 1 || roleId == 2)
+                                {
+                                    <div class="col-md-12 form-group mb-4">
+                                        <label class="form-label-custom">Select Employee <span class="text-danger">*</span></label>
+                                        <select asp-for="EmployeeId" class="form-control form-control-lg-custom select2" asp-items="ViewBag.Employees" required>
+                                            <option value="">-- Search or Select Employee --</option>
+                                        </select>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="col-md-12 form-group mb-4">
+                                        <label class="form-label-custom">Applying As</label>
+                                        <input type="text" class="form-control form-control-lg-custom bg-light text-muted font-weight-bold" value="@userName" readonly />
+                                        <small class="text-info"><i class="fas fa-info-circle"></i> Your Employee ID is automatically securely linked.</small>
+                                    </div>
+                                }
+
+                                <div class="col-md-6 form-group mb-4">
+                                    <label class="form-label-custom">Leave Type <span class="text-danger">*</span></label>
+                                    <select asp-for="LeaveTypeId" class="form-control form-control-lg-custom" asp-items="ViewBag.LeaveTypes" required>
+                                        <option value="">-- Choose Type --</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6 form-group mb-4 d-flex align-items-end">
+                                    <div id="durationDisplay" class="total-days-badge w-100 text-center">
+                                        <i class="far fa-clock mr-2"></i> Duration: <span id="daysCount">0</span> Days
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 form-group mb-4">
+                                    <label class="form-label-custom">Start Date <span class="text-danger">*</span></label>
+                                    <input type="date" id="startDate" asp-for="FromDate" class="form-control form-control-lg-custom" required />
+                                </div>
+
+                                <div class="col-md-6 form-group mb-4">
+                                    <label class="form-label-custom">End Date <span class="text-danger">*</span></label>
+                                    <input type="date" id="endDate" asp-for="ToDate" class="form-control form-control-lg-custom" required />
+                                </div>
+
+                                <div class="col-md-12 form-group mb-4">
+                                    <label class="form-label-custom">Reason / Justification <span class="text-danger">*</span></label>
+                                    <textarea asp-for="Reason" class="form-control" rows="4" style="border-radius: 8px; border-color: #e2e5e8;" placeholder="Please describe the reason for your leave request..." required></textarea>
+                                </div>
+
+                                <div class="col-md-12 form-group mb-2">
+                                    <label class="form-label-custom">Attachment (Optional)</label>
+                                    <div class="custom-file">
+                                        <input type="file" class="custom-file-input" id="customFile">
+                                        <label class="custom-file-label" for="customFile" style="border-radius: 8px;">Choose file (Medical Cert, etc)...</label>
+                                    </div>
+                                    <small class="text-muted">Allowed: PDF, JPG, PNG (Max 2MB)</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-footer bg-white border-top-0 px-4 pb-4 text-right">
+
+                            @if (roleId == 1 || roleId == 2)
+                            {
+                                <a href="@Url.Action("LeaveRequests", "Leaves")" class="btn btn-light text-muted px-4 font-weight-bold mr-2" style="border-radius: 8px;">Cancel</a>
+                            }
+                            else
+                            {
+                                <a href="@Url.Action("MyLeaves", "EmployeePortal")" class="btn btn-light text-muted px-4 font-weight-bold mr-2" style="border-radius: 8px;">Cancel</a>
+                            }
+
+                            <button type="submit" class="btn btn-primary px-5 font-weight-bold shadow-sm" style="border-radius: 8px; background: #5e72e4; border:none;">
+                                Submit Request
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card card-modern balance-card mb-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="mb-0 font-weight-bold">My Balance</h5>
+                            <div class="info-icon"><i class="fas fa-wallet"></i></div>
+                        </div>
+
+                        <div class="row text-center">
+                            <div class="col-4 border-right border-light">
+                                <h3 class="mb-0 font-weight-bold">12</h3>
+                                <small>Annual</small>
+                            </div>
+                            <div class="col-4 border-right border-light">
+                                <h3 class="mb-0 font-weight-bold">5</h3>
+                                <small>Sick</small>
+                            </div>
+                            <div class="col-4">
+                                <h3 class="mb-0 font-weight-bold">2</h3>
+                                <small>Casual</small>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-3 border-top border-light">
+                            <small class="d-block text-white-50"><i class="fas fa-info-circle mr-1"></i> Balance updates after HR approval.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-modern bg-white">
+                    <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                        <h6 class="font-weight-bold text-dark">Policy Highlights</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled text-muted small mb-0">
+                            <li class="mb-2"><i class="fas fa-check text-success mr-2"></i> Submit request 2 days in advance.</li>
+                            <li class="mb-2"><i class="fas fa-check text-success mr-2"></i> Medical cert required for >2 sick days.</li>
+                            <li class="mb-0"><i class="fas fa-check text-success mr-2"></i> Half-day leaves are allowed.</li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // 1. Initialize Select2 for better dropdowns
+            if ($('.select2').length) {
+                $('.select2').select2({
+                    theme: 'bootstrap4',
+                    placeholder: "Select an option"
+                });
+            }
+
+            // 2. Auto-Calculate Days Logic
+            function calculateDays() {
+                var startVal = $('#startDate').val();
+                var endVal = $('#endDate').val();
+
+                if (startVal && endVal) {
+                    var start = new Date(startVal);
+                    var end = new Date(endVal);
+
+                    // Difference in time
+                    var diff = end - start;
+
+                    // Difference in days (milliseconds to days)
+                    var days = diff / (1000 * 60 * 60 * 24);
+
+                    if (days >= 0) {
+                        // Adding 1 because if start=end, it counts as 1 day
+                        $('#daysCount').text(days + 1);
+                        $('#durationDisplay').removeClass('text-danger').addClass('text-primary');
+                    } else {
+                        $('#daysCount').text(0);
+                        alert("End date cannot be before Start date");
+                        $('#endDate').val('');
+                    }
+                }
+            }
+
+            // Trigger calculation on date change
+            $('#startDate, #endDate').on('change', calculateDays);
+        });
+
+        // Custom File Input visual update
+        $(".custom-file-input").on("change", function() {
+            var fileName = $(this).val().split("\\").pop();
+            $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+        });
+    </script>
+}

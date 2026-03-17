@@ -1,0 +1,96 @@
+﻿@model TeamPulse.Models.TblLoan
+@{
+    Layout = null; // 👈 लेआउट हटा दिया ताकि सिर्फ रिपोर्ट दिखे
+    var history = ViewBag.History as IEnumerable<TeamPulse.Models.TblLoanRepayment>;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Loan Statement - @Model.Employee?.FirstName</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 30px;
+        }
+
+        .statement-header {
+            border-bottom: 2px solid #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+
+        @@media print {
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body onload="window.print()">
+    @* 👈 पेज खुलते ही प्रिंट डायलॉग आएगा *@
+
+    <div class="container border p-5 bg-white">
+        <div class="statement-header d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-0 text-primary">TeamPulse</h2>
+                <p class="text-muted">Employee Loan Statement</p>
+            </div>
+            <div class="text-right no-print">
+                <button onclick="window.print()" class="btn btn-sm btn-outline-dark">Print / Save as PDF</button>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-6">
+                <h6 class="text-muted text-uppercase small font-weight-bold">Employee Details</h6>
+                <p class="mb-0"><strong>@Model.Employee?.FirstName @Model.Employee?.LastName</strong></p>
+                <p class="mb-0 text-muted small">Employee ID: #@Model.EmployeeId</p>
+            </div>
+            <div class="col-6 text-right">
+                <h6 class="text-muted text-uppercase small font-weight-bold">Loan Summary</h6>
+                <p class="mb-0">Sanctioned: <strong>₹ @Model.LoanAmount.ToString("N0")</strong></p>
+                <p class="mb-0">Balance: <strong class="text-danger">₹ @Model.BalanceAmount?.ToString("N0")</strong></p>
+            </div>
+        </div>
+
+        <h6 class="text-muted text-uppercase small font-weight-bold mb-3">Repayment History</h6>
+        <table class="table table-bordered table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Inst. No</th>
+                    <th>Date</th>
+                    <th>Amount Paid</th>
+                    <th>Remaining Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (history != null && history.Any())
+                {
+                    foreach (var item in history)
+                    {
+                        <tr>
+                            <td>#@item.InstallmentNo</td>
+                            <td>@item.PaymentDate.ToString("dd MMM yyyy")</td>
+                            <td>₹ @item.AmountPaid.ToString("N2")</td>
+                            <td>₹ @item.RemainingBalance.ToString("N2")</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4" class="text-center italic">No repayments recorded yet.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="mt-5 pt-5 d-flex justify-content-between">
+            <div class="text-center border-top px-4 pt-2">Employee Signature</div>
+            <div class="text-center border-top px-4 pt-2">Authorized Signatory</div>
+        </div>
+    </div>
+</body>
+</html>

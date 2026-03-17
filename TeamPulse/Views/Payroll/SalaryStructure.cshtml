@@ -1,0 +1,372 @@
+﻿@model IEnumerable<TeamPulse.Models.TblSalaryStructure>
+@{
+    ViewData["Title"] = "Salary Management";
+}
+
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-soft: #eafaf1;
+        --danger-soft: #fdf2f2;
+    }
+
+    .content-header h3 {
+        font-weight: 700;
+        color: #334155;
+    }
+
+    .card {
+        border-radius: 12px;
+        transition: transform 0.2s;
+    }
+
+    .table thead th {
+        background-color: #f8fafc;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        color: #64748b;
+        border-top: none;
+    }
+
+    .salary-card-header {
+        font-size: 0.9rem;
+        letter-spacing: 1px;
+    }
+
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    .input-group-text {
+        background: #f8fafc;
+        color: #64748b;
+    }
+
+    .btn-define {
+        border-radius: 20px;
+        padding: 5px 15px;
+        font-weight: 600;
+    }
+
+    .gross-box {
+        background: #f1f5f9;
+        border-radius: 8px;
+        padding: 15px;
+    }
+
+    .net-box {
+        background: var(--success-soft);
+        border-radius: 8px;
+        padding: 15px;
+        border: 1px solid #d1fae5;
+    }
+</style>
+
+<section class="content-header py-4">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h3 class="mb-1">Payroll Configuration</h3>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb bg-transparent p-0 m-0">
+                        <li class="breadcrumb-item small"><a href="#">Dashboard</a></li>
+                        <li class="breadcrumb-item active small" aria-current="page">Salary Structure</li>
+                    </ol>
+                </nav>
+            </div>
+            <button>
+                <a asp-action="ExportSalaryReport" class="btn btn-primary shadow-sm rounded-pill px-4">
+                    <i class="fas fa-file-export mr-2"></i> Export Report
+                </a>
+            </button>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-custom bg-white border-left border-success shadow-sm alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle text-success mr-3 fa-lg"></i>
+                    <strong>Success!</strong> &nbsp; @TempData["Success"]
+                </div>
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
+        }
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th class="pl-4">Employee Details</th>
+                            <th class="text-right">Base Components</th>
+                            <th class="text-right">Special Pay</th>
+                            <th class="text-right">Gross Amount</th>
+                            <th class="text-right">Deductions</th>
+                            <th class="text-right text-success">Net Take-Home</th>
+                            <th class="text-right text-info">Monthly CTC</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="pl-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm mr-3 bg-light rounded-circle d-flex align-items-center justify-content-center" style="width:40px; height:40px;">
+                                            <span class="text-primary font-weight-bold">@(item.Employee.FirstName?[0])</span>
+                                        </div>
+                                        <div>
+                                            <div class="font-weight-bold">@item.Employee.FirstName @item.Employee.LastName</div>
+                                            <div class="small text-muted">@item.Employee.Department?.DepartmentName</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-right">
+                                    <div class="small">Basic: ₹@item.BasicSalary?.ToString("N0")</div>
+                                    <div class="small text-muted">HRA/DA: ₹@(((item.Hra ?? 0) + (item.Da ?? 0)).ToString("N0"))</div>
+                                </td>
+                                <td class="text-right align-middle">₹@item.SpecialAllowance?.ToString("N0")</td>
+                                <td class="text-right align-middle font-weight-bold text-dark">₹@item.GrossSalary?.ToString("N0")</td>
+                                <td class="text-right align-middle text-danger small">
+                                    -₹@(((item.PfEmployeeShare ?? 0) + (item.EsiEmployeeShare ?? 0) + (item.ProfessionalTax ?? 0)).ToString("N0"))
+                                </td>
+                                <td class="text-right align-middle">
+                                    <span class="badge badge-success px-3 py-2" style="font-size: 0.9rem;">
+                                        ₹ @item.NetSalary?.ToString("N0")
+                                    </span>
+                                </td>
+
+                                <td class="text-right align-middle font-weight-bold text-info">
+                                    ₹@item.MonthlyCTC?.ToString("N0")
+                                </td>
+                                <td class="text-center align-middle">
+                                    @if (item.IsApproved == true)
+                                    {
+                                        <span class="badge badge-success px-3 py-2 rounded-pill"><i class="fas fa-check"></i> Approved</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-warning px-3 py-2 rounded-pill">Pending</span>
+
+                                        @* 🚀 बटन दिखाने के लिए RoleID चेक को एक बार कमेंट करके देखें *@
+                                         @if (Context.Session.GetInt32("RoleID") == 1) { 
+                                        <button class="btn btn-sm btn-success ml-2 rounded-circle shadow-sm"
+                                                onclick="approveSalary(@item.EmployeeId)" title="Approve Now">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                         }
+                                    }
+                                </td>
+                                <td class="text-center align-middle">
+                                    <button class="btn btn-sm btn-outline-primary btn-define"
+                                            onclick="editSalary(@item.EmployeeId, '@item.Employee.FirstName @item.Employee.LastName', @(item.BasicSalary ?? 0), @(item.Hra ?? 0), @(item.Da ?? 0), @(item.SpecialAllowance ?? 0), @(item.PfEmployeeShare ?? 0), @(item.EsiEmployeeShare ?? 0), @(item.ProfessionalTax ?? 0))">
+                                        <i class="fas fa-sliders-h mr-1"></i> Configure
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="salaryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-header bg-dark text-white p-4">
+                <h5 class="modal-title font-weight-bold">
+                    <i class="fas fa-calculator mr-2 text-warning"></i>
+                    Salary Structuring: <span id="empName" class="text-warning"></span>
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            </div>
+
+            <form asp-action="SaveStructure" method="post">
+                <div class="modal-body p-4 bg-light">
+                    <input type="hidden" name="EmployeeID" id="empId" />
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="salary-card-header text-uppercase text-success font-weight-bold mb-3">
+                                <i class="fas fa-plus-circle mr-1"></i> Earnings (Monthly)
+                            </h6>
+                            <div class="card border-0 shadow-sm p-3 mb-3">
+                                <div class="form-group">
+                                    <label class="small font-weight-bold">Basic Pay</label>
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend"><span class="input-group-text">₹</span></div>
+                                        <input type="number" id="txtBasic" name="BasicSalary" class="form-control" onkeyup="calcTotal()" />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="small font-weight-bold">HRA</label>
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend"><span class="input-group-text">₹</span></div>
+                                        <input type="number" id="txtHRA" name="HRA" class="form-control" onkeyup="calcTotal()" />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="form-group">
+                                            <label class="small font-weight-bold">DA</label>
+                                            <input type="number" id="txtDA" name="DA" class="form-control form-control-sm" onkeyup="calcTotal()" />
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-group">
+                                            <label class="small font-weight-bold">Spl. Allowance</label>
+                                            <input type="number" id="txtSpl" name="SpecialAllowance" class="form-control form-control-sm" onkeyup="calcTotal()" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h6 class="salary-card-header text-uppercase text-danger font-weight-bold mb-3">
+                                <i class="fas fa-minus-circle mr-1"></i> Statutory Deductions
+                            </h6>
+                            <div class="card border-0 shadow-sm p-3 mb-3">
+                                <div class="form-group">
+                                    <label class="small font-weight-bold">Provident Fund (PF)</label>
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend"><span class="input-group-text">₹</span></div>
+                                        <input type="number" id="txtPF" name="PF_EmployeeShare" class="form-control text-danger" onkeyup="calcTotal()" />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="small font-weight-bold">ESI Contribution</label>
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend"><span class="input-group-text">₹</span></div>
+                                        <input type="number" id="txtESI" name="EsiEmployeeShare" class="form-control text-danger" onkeyup="calcTotal()" />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="small font-weight-bold">Professional Tax (PT)</label>
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend"><span class="input-group-text">₹</span></div>
+                                        <input type="number" id="txtPT" name="ProfessionalTax" class="form-control text-danger" onkeyup="calcTotal()" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3 no-gutters shadow-sm rounded overflow-hidden">
+                        <div class="col-md-6 gross-box text-center">
+                            <span class="text-muted small text-uppercase font-weight-bold">Gross Monthly</span>
+                            <h4 class="mb-0 text-primary font-weight-bold">₹ <span id="lblGross">0</span></h4>
+                        </div>
+                        <div class="col-md-6 net-box text-center">
+                            <span class="text-muted small text-uppercase font-weight-bold">Net In-Hand</span>
+                            <h4 class="mb-0 text-success font-weight-bold">₹ <span id="lblNet">0</span></h4>
+                        </div>
+                        <div class="col-md-4 text-center" style="background: #eef2ff; padding: 15px; border: 1px solid #e0e7ff;">
+                            <span class="text-muted small text-uppercase font-weight-bold">Monthly CTC</span>
+                            <h4 class="mb-0 text-info font-weight-bold">₹ <span id="lblCTC">0</span></h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0 bg-white p-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-5 shadow">
+                        Update Salary Structure
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // JS Logic remains same, added to ensure clean UI update
+    function editSalary(id, name, basic, hra, da, spl, pf, esi, pt) {
+        $("#empId").val(id);
+        $("#empName").text(name);
+        $("#txtBasic").val(basic);
+        $("#txtHRA").val(hra);
+        $("#txtDA").val(da);
+        $("#txtSpl").val(spl);
+        $("#txtPF").val(pf);
+        $("#txtESI").val(esi);
+        $("#txtPT").val(pt);
+        calcTotal();
+        $("#salaryModal").modal("show");
+    }
+
+             function calcTotal() {
+        let getVal = (id) => parseFloat($(id).val()) || 0;
+
+        let basic = getVal("#txtBasic");
+        let hra = getVal("#txtHRA");
+        let da = getVal("#txtDA");
+        let spl = getVal("#txtSpl");
+
+        let gross = basic + hra + da + spl;
+
+        // 🚩 AUTO CALCULATIONS (Sirf tab jab field khali ho ya zero ho)
+        let pfEmp = Math.round(basic * 0.12);
+        let pt = gross > 21000 ? 200 : 0;
+
+        // 🛡️ FIX: Agar user ne ESI field me kuch likha hai, to wahi rehne do
+        let currentESI = getVal("#txtESI");
+        if (currentESI === 0) {
+            currentESI = gross <= 21000 ? Math.round(gross * 0.0075) : 0;
+            $("#txtESI").val(currentESI);
+        }
+
+        // 🏢 Employer Share (CTC Logic)
+        let pfEmployer = Math.round(basic * 0.13);
+        let esiEmployer = gross <= 21000 ? Math.round(gross * 0.0325) : 0;
+        let monthlyCTC = gross + pfEmployer + esiEmployer;
+
+        $("#txtPF").val(pfEmp);
+        $("#txtPT").val(pt);
+
+        // Final Calculation based on CURRENT values in inputs
+        let actualESI = getVal("#txtESI");
+        let deductions = pfEmp + actualESI + pt;
+        let net = gross - deductions;
+
+        // UI Updates
+        $("#lblGross").text(gross.toLocaleString('en-IN'));
+        $("#lblNet").text(net.toLocaleString('en-IN'));
+        $("#lblCTC").text(monthlyCTC.toLocaleString('en-IN'));
+    }
+                
+    
+          function approveSalary(empId) {
+        if (confirm("Confirm Approved?")) {
+            $.ajax({
+                // Path: /Payroll/ApproveSalary
+                url: '@Url.Action("ApproveSalary", "Payroll")',
+                type: 'POST',
+                data: { id: empId },
+                success: function (res) {
+                    if (res.success) {
+                        alert("Salary Structure Approved!"); // User ko confirmation dikhayein
+                        location.reload();
+                    } else {
+                        alert("Error: " + res.message);
+                    }
+                },
+                error: function (err) {
+                    console.log(err);
+                    alert("Server error! Please check if the method exists in PayrollController.");
+                }
+            });
+        }
+    }
+</script>

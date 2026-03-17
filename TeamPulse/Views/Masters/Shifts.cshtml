@@ -1,0 +1,278 @@
+﻿@model IEnumerable<TeamPulse.ViewModels.ShiftVM>
+@{
+    ViewData["Title"] = "Operations - Shift Rosters";
+}
+
+<style>
+    /* Premium Dashboard Styling */
+    .shift-container {
+        padding: 2rem 0;
+    }
+
+    .glass-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        background: #fff;
+        overflow: hidden;
+    }
+
+    /* Table & Row Styling */
+    .table-modern thead th {
+        background-color: #f8fafc;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        letter-spacing: 0.1em;
+        color: #64748b;
+        border: none;
+        padding: 1.25rem;
+    }
+
+    .table-modern tbody td {
+        vertical-align: middle;
+        padding: 1.25rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    /* Time Badge Styling */
+    .time-badge {
+        display: inline-flex;
+        align-items: center;
+        background: #f1f5f9;
+        color: #1e293b;
+        padding: 6px 14px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    .grace-pill {
+        background: #fff7ed;
+        color: #9a3412;
+        border: 1px solid #ffedd5;
+        border-radius: 50px;
+        padding: 4px 12px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    /* Action Buttons */
+    .btn-circle-action {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.3s;
+        border: none;
+    }
+
+    .btn-edit-soft {
+        background: #e0f2fe;
+        color: #0369a1;
+    }
+
+        .btn-edit-soft:hover {
+            background: #0369a1;
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+    .btn-delete-soft {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+        .btn-delete-soft:hover {
+            background: #b91c1c;
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+    /* Modal Tweaks */
+    .modal-content {
+        border: none;
+        border-radius: 24px;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid #f1f5f9;
+        padding: 1.5rem 2rem;
+    }
+
+    .input-modern {
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+    }
+
+        .input-modern:focus {
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+            border-color: #4f46e5;
+        }
+</style>
+
+<div class="content-header py-4">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="font-weight-bold text-dark mb-1">Shift Rosters</h2>
+                <p class="text-muted small mb-0"><i class="fas fa-history mr-1"></i> Define operational timings and attendance grace periods</p>
+            </div>
+            <button class="btn btn-primary rounded-pill px-4 shadow-sm font-weight-bold"
+                    onclick="openModal(0, '', '', '', 15)">
+                <i class="fas fa-plus-circle mr-2"></i> Create New Shift
+            </button>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert bg-white border-left border-success shadow-sm alert-dismissible fade show mb-4">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle text-success mr-3 fa-lg"></i>
+                    <div><strong class="text-dark">Updated!</strong> <span class="text-muted">@TempData["Success"]</span></div>
+                </div>
+                <button class="close" data-dismiss="alert">&times;</button>
+            </div>
+        }
+
+        <div class="card glass-card border-0">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-modern mb-0">
+                        <thead>
+                            <tr>
+                                <th class="pl-4">Shift Identity</th>
+                                <th>Schedule (In - Out)</th>
+                                <th>Policy Settings</th>
+                                <th class="text-right pr-4">Operations</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="pl-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-soft-primary p-2 rounded mr-3 text-primary">
+                                                <i class="fas fa-clock fa-lg"></i>
+                                            </div>
+                                            <div>
+                                                <div class="font-weight-bold text-dark h6 mb-0">@item.ShiftName</div>
+                                                <small class="text-muted text-uppercase" style="font-size: 10px;">9 Hour Cycle</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="time-badge mr-2">
+                                            <i class="far fa-sun mr-2 text-warning"></i> @item.StartTime.ToString("hh:mm tt")
+                                        </div>
+                                        <i class="fas fa-long-arrow-alt-right text-muted mx-2"></i>
+                                        <div class="time-badge">
+                                            <i class="far fa-moon mr-2 text-primary"></i> @item.EndTime.ToString("hh:mm tt")
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="grace-pill">
+                                            <i class="fas fa-stopwatch mr-1"></i> @item.GraceTimeMinutes Mins Grace
+                                        </span>
+                                    </td>
+                                    <td class="text-right pr-4">
+                                        <button class="btn-circle-action btn-edit-soft mr-2 shadow-sm"
+                                                onclick="openModal(@item.ShiftID, '@item.ShiftName', '@item.StartTime.ToString("HH:mm")', '@item.EndTime.ToString("HH:mm")', @item.GraceTimeMinutes)">
+                                            <i class="fas fa-sliders-h"></i>
+                                        </button>
+                                        <a href="@Url.Action("DeleteShift", "Masters", new { id = item.ShiftID })"
+                                           class="btn-circle-action btn-delete-soft shadow-sm"
+                                           onclick="return confirm('Dismantle this shift policy?');">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="shiftModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-white">
+                <h5 class="modal-title font-weight-bold text-dark" id="modalTitle">Shift Configuration</h5>
+                <button class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <form asp-action="SaveShift" asp-controller="Masters" method="post">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="ShiftID" id="hdnId" value="0" />
+
+                    <div class="form-group mb-4">
+                        <label class="small font-weight-bold text-muted text-uppercase">Shift Label</label>
+                        <input type="text" name="ShiftName" id="txtName" class="form-control input-modern" required placeholder="e.g. General Day Shift" />
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <label class="small font-weight-bold text-muted text-uppercase">Check-In Time</label>
+                            <input type="time" name="StartTime" id="txtStart" class="form-control input-modern" required />
+                        </div>
+                        <div class="col-6">
+                            <label class="small font-weight-bold text-muted text-uppercase">Check-Out Time</label>
+                            <input type="time" name="EndTime" id="txtEnd" class="form-control input-modern" required />
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-0">
+                        <label class="small font-weight-bold text-muted text-uppercase">Late Arrival Buffer (Mins)</label>
+                        <div class="input-group">
+                            <input type="number" name="GraceTimeMinutes" id="txtGrace" class="form-control input-modern" value="15" />
+                            <div class="input-group-append">
+                                <span class="input-group-text bg-light border-left-0" style="border-radius: 0 12px 12px 0;">Minutes</span>
+                            </div>
+                        </div>
+                        <p class="small text-muted mt-2 mb-0">
+                            <i class="fas fa-info-circle mr-1"></i> Employees can mark attendance without penalty within this window.
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 shadow">Sync Shift Policy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(id, name, start, end, grace) {
+            $('#hdnId').val(id);
+            $('#txtName').val(name);
+            $('#txtStart').val(start);
+            $('#txtEnd').val(end);
+            $('#txtGrace').val(grace);
+
+            if (id === 0) {
+                $('#modalTitle').html('<i class="fas fa-plus-circle text-primary mr-2"></i>Configure New Shift');
+                $('#txtStart').val("09:30");
+                $('#txtEnd').val("18:30");
+            } else {
+                $('#modalTitle').html('<i class="fas fa-edit text-primary mr-2"></i>Edit Shift Schedule');
+            }
+            $('#shiftModal').modal('show');
+        }
+    </script>
+}

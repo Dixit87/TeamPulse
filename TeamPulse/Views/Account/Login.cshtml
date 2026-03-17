@@ -1,0 +1,288 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>TeamPulse HRMS | Secure Login</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter',sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            background: #f1f5f9;
+        }
+
+        /* LEFT IMAGE SECTION */
+
+        .left {
+            flex: 1.2;
+            background: url("https://images.unsplash.com/photo-1521737604893-d14cc237f11d") center/cover;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .overlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg,#4f46e5cc,#6366f1cc);
+        }
+
+        .hero {
+            position: relative;
+            z-index: 2;
+            max-width: 500px;
+            padding: 40px;
+        }
+
+            .hero h1 {
+                font-size: 44px;
+                font-weight: 700;
+                margin-bottom: 15px;
+            }
+
+            .hero p {
+                font-size: 16px;
+                line-height: 1.7;
+                opacity: 0.9;
+                margin-bottom: 35px;
+            }
+
+        .features {
+            display: flex;
+            gap: 25px;
+        }
+
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        /* RIGHT LOGIN */
+
+        .right {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+        }
+
+        .login-card {
+            width: 460px;
+            padding: 50px 45px;
+            border-radius: 20px;
+            background: white;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.12);
+            transition: 0.3s;
+        }
+
+            .login-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 35px 80px rgba(0,0,0,0.15);
+            }
+
+        .logo {
+            font-size: 26px;
+            font-weight: 700;
+            color: #4f46e5;
+            margin-bottom: 35px;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .subtitle {
+            font-size: 15px;
+            color: #64748b;
+            margin-bottom: 35px;
+            text-align: center;
+        }
+
+        .field {
+            margin-bottom: 22px;
+        }
+
+            .field label {
+                font-size: 13px;
+                margin-bottom: 6px;
+                display: block;
+                color: #475569;
+            }
+
+        .input {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            font-size: 15px;
+            background: #f8fafc;
+            transition: 0.25s;
+        }
+
+            .input:focus {
+                outline: none;
+                border-color: #4f46e5;
+                background: white;
+                box-shadow: 0 0 0 4px rgba(79,70,229,0.12);
+            }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg,#4f46e5,#6366f1);
+            border: none;
+            color: white;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+
+            .btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px rgba(79,70,229,0.35);
+            }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 13px;
+            text-align: center;
+            color: #94a3b8;
+        }
+
+        /* RESPONSIVE */
+
+        @@media(max - width:900px) {
+
+            .left {
+                display: none;
+            }
+
+            .right {
+                flex: 1;
+            }
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="left">
+
+        <div class="overlay"></div>
+
+        <div class="hero">
+
+            <h1>Empower Your Workforce</h1>
+
+            <p>
+                TeamPulse HRMS helps you manage employees, payroll,
+                attendance and HR analytics in a single powerful platform.
+            </p>
+
+            <div class="features">
+
+                <div class="feature">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    Secure Data
+                </div>
+
+                <div class="feature">
+                    <i class="fa-solid fa-clock"></i>
+                    Real-time HR
+                </div>
+
+                <div class="feature">
+                    <i class="fa-solid fa-chart-line"></i>
+                    Analytics
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="right">
+
+        <div class="login-card">
+
+            <div class="logo">
+                <i class="fa-solid fa-bolt"></i> TeamPulse
+            </div>
+
+            <div class="title">Welcome Back</div>
+
+            <div class="subtitle">
+                Sign in to access your HR dashboard
+            </div>
+
+            @if (ViewBag.Error != null)
+            {
+                <div style="background:#fee2e2;color:#b91c1c;padding:10px;border-radius:6px;margin-bottom:15px;">
+                    @ViewBag.Error
+                </div>
+            }
+
+            <form asp-action="Login" method="post">
+
+                <div class="field">
+                    <label>Email Address</label>
+                    <input type="email" name="email" class="input" placeholder="employee@company.com" required>
+                </div>
+
+                <div class="field">
+                    <label>Password</label>
+                    <input type="password" name="password" class="input" placeholder="Enter password" required>
+                </div>
+
+                <button class="btn">
+                    Login to Dashboard
+                </button>
+
+            </form>
+
+            <div class="footer">
+                © @DateTime.Now.Year TeamPulse HRMS
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

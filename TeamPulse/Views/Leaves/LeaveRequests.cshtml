@@ -1,0 +1,355 @@
+﻿@model IEnumerable<TeamPulse.Models.TblLeaveRequest>
+@{
+    ViewData["Title"] = "Leave Management";
+    // Quick Stats Calculation for Dashboard (In real app, pass via ViewModel)
+    var pendingCount = Model.Count(x => x.Status == "Pending");
+    var approvedCount = Model.Count(x => x.Status == "Approved");
+}
+
+<style>
+    body {
+        background-color: #f8f9fe;
+    }
+
+    /* Modern Card & Table Styles */
+    .card-modern {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        background: white;
+        transition: transform 0.2s;
+    }
+
+    /* Stats Cards */
+    .stats-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    /* Table Typography */
+    .table thead th {
+        border-top: none;
+        border-bottom: 2px solid #eef2f7;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #8898aa;
+        font-weight: 700;
+        padding-bottom: 1rem;
+    }
+
+    .table td {
+        vertical-align: middle;
+        padding: 1rem 0.75rem;
+        border-top: 1px solid #eef2f7;
+    }
+
+    /* Avatar Styling */
+    .avatar-circle {
+        width: 40px;
+        height: 40px;
+        background-color: #5e72e4;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.9rem;
+        margin-right: 12px;
+    }
+
+    /* Soft Badges */
+    .badge-soft-warning {
+        background-color: #fff8dd;
+        color: #ffc107;
+        border: 1px solid rgba(255, 193, 7, 0.2);
+    }
+
+    .badge-soft-success {
+        background-color: #e0fdf4;
+        color: #2dce89;
+        border: 1px solid rgba(45, 206, 137, 0.2);
+    }
+
+    .badge-soft-danger {
+        background-color: #fee2e2;
+        color: #f5365c;
+        border: 1px solid rgba(245, 54, 92, 0.2);
+    }
+
+    .badge-pill {
+        padding: 0.5em 1em;
+        font-weight: 600;
+    }
+
+    /* Action Buttons */
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        margin: 0 2px;
+        transition: all 0.2s;
+    }
+
+        .btn-icon:hover {
+            transform: translateY(-2px);
+            shadow: 0 3px 8px rgba(0,0,0,0.1);
+        }
+</style>
+
+<div class="content-header pt-4 pb-2">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="font-weight-bold text-dark mb-0">Leave Management</h2>
+                <p class="text-muted text-sm">Review and manage employee time-off requests.</p>
+            </div>
+            <div>
+                <button class="btn btn-white shadow-sm mr-2"><i class="fas fa-filter text-muted mr-2"></i>Filter</button>
+                <button class="btn btn-primary shadow-sm"><i class="fas fa-download mr-2"></i>Export Report</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card card-modern p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="stats-icon bg-light text-warning mr-3">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted text-uppercase mb-1 font-weight-bold" style="font-size: 0.7rem;">Pending Review</h6>
+                            <h3 class="font-weight-bold text-dark mb-0">@pendingCount</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-modern p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="stats-icon bg-light text-success mr-3">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted text-uppercase mb-1 font-weight-bold" style="font-size: 0.7rem;">Approved (All Time)</h6>
+                            <h3 class="font-weight-bold text-dark mb-0">@approvedCount</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-modern p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="stats-icon bg-light text-primary mr-3">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted text-uppercase mb-1 font-weight-bold" style="font-size: 0.7rem;">Total Requests</h6>
+                            <h3 class="font-weight-bold text-dark mb-0">@Model.Count()</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success border-0 shadow-sm rounded-lg fade show mb-4">
+                <i class="fas fa-check-circle mr-2"></i> @TempData["Success"]
+                <button class="close" data-dismiss="alert">&times;</button>
+            </div>
+        }
+
+        <div class="card card-modern">
+            <div class="card-header bg-white border-0 py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 font-weight-bold">Recent Requests</h5>
+                    <div class="input-group" style="width: 250px;">
+                        <input type="text" class="form-control form-control-sm border-right-0" placeholder="Search employee...">
+                        <div class="input-group-append">
+                            <span class="input-group-text bg-white border-left-0"><i class="fas fa-search text-muted"></i></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table align-items-center table-flush table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th style="width: 25%;">Employee</th>
+                            <th>Applied On</th>
+                            <th>Leave Period</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th class="text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var item in Model)
+                            {
+                                // Logic to get initials (e.g., "John Doe" -> "JD")
+                                var initials = "";
+                                if (!string.IsNullOrEmpty(item.Employee?.FirstName)) { initials += item.Employee.FirstName[0]; }
+                                if (!string.IsNullOrEmpty(item.Employee?.LastName)) { initials += item.Employee.LastName[0]; }
+
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-circle shadow-sm">@initials</div>
+                                            <div>
+                                                <h6 class="mb-0 text-sm font-weight-bold text-dark">@item.Employee.FirstName @item.Employee.LastName</h6>
+                                                <small class="text-muted">@item.Employee.Department</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted text-sm">@item.AppliedDate?.ToString("MMM dd, yyyy")</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <span class="text-dark font-weight-bold text-sm">
+                                                @item.FromDate.ToString("MMM dd") <i class="fas fa-arrow-right text-muted mx-1 text-xs"></i> @item.ToDate.ToString("MMM dd")
+                                            </span>
+                                            <small class="text-muted">@item.TotalDays Days &bull; @item.Reason</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-pill badge-light text-muted border">@item.LeaveType.TypeName</span>
+                                    </td>
+                                    <td>
+                                        @if (item.Status == "Pending")
+                                        {
+                                            <span class="badge badge-pill badge-soft-warning"><i class="fas fa-spinner fa-spin mr-1"></i> Pending</span>
+                                        }
+                                        else if (item.Status == "Approved")
+                                        {
+                                            <span class="badge badge-pill badge-soft-success"><i class="fas fa-check mr-1"></i> Approved</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-pill badge-soft-danger"><i class="fas fa-times mr-1"></i> Rejected</span>
+                                        }
+                                    </td>
+                                    <td class="text-right">
+                                        @if (item.Status == "Pending")
+                                        {
+                                            <button class="btn btn-icon btn-success shadow-sm" onclick="openModal(@item.LeaveRequestId, 'Approved')" title="Approve">
+                                                <i class="fas fa-check text-white text-xs"></i>
+                                            </button>
+                                            <button class="btn btn-icon btn-danger shadow-sm" onclick="openModal(@item.LeaveRequestId, 'Rejected')" title="Reject">
+                                                <i class="fas fa-times text-white text-xs"></i>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted text-xs font-italic">@item.AdminRemarks</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="d-flex flex-column align-items-center justify-content-center">
+                                        <div class="bg-light rounded-circle p-3 mb-3" style="width: 80px; height: 80px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fas fa-mug-hot text-muted fa-2x"></i>
+                                        </div>
+                                        <h5 class="text-dark font-weight-bold">All caught up!</h5>
+                                        <p class="text-muted mb-0">No pending leave requests found at the moment.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card-footer bg-white border-0 py-3">
+                <nav aria-label="...">
+                    <ul class="pagination pagination-sm justify-content-end mb-0">
+                        <li class="page-item disabled"><a class="page-link" href="#" tabindex="-1">Previous</a></li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item"><a class="page-link" href="#">Next</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="actionModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+            <form asp-action="UpdateStatus" method="post">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title font-weight-bold" id="modalTitle">Confirm Action</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body pt-4">
+                    <input type="hidden" name="id" id="reqId" />
+                    <input type="hidden" name="status" id="reqStatus" />
+
+                    <div class="text-center mb-4">
+                        <div id="modalIcon" class="mb-3" style="font-size: 3rem;"></div>
+                        <h4 class="font-weight-bold" id="statusTextDisplay"></h4>
+                        <p class="text-muted">Are you sure you want to proceed with this action?</p>
+                    </div>
+
+                    <div class="form-group bg-light p-3 rounded">
+                        <label class="small font-weight-bold text-muted">ADD REMARKS (OPTIONAL)</label>
+                        <textarea name="remarks" class="form-control border-0 bg-white" rows="2" placeholder="Enter remarks for the employee..." style="resize: none;"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-link text-muted" data-dismiss="modal">Cancel</button>
+                    <button type="submit" id="btnConfirm" class="btn btn-primary px-4 rounded-pill font-weight-bold">Confirm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(id, status) {
+            $("#reqId").val(id);
+            $("#reqStatus").val(status);
+
+            var displayStatus = status === 'Approved' ? 'Approve Request' : 'Reject Request';
+            $("#statusTextDisplay").text(displayStatus);
+
+            // Dynamic Styling based on action
+            if(status === 'Rejected') {
+                $("#modalIcon").html('<i class="fas fa-times-circle text-danger"></i>');
+                $("#btnConfirm").removeClass('btn-success').addClass('btn-danger').text('Reject Leave');
+            } else {
+                $("#modalIcon").html('<i class="fas fa-check-circle text-success"></i>');
+                $("#btnConfirm").removeClass('btn-danger').addClass('btn-success').text('Approve Leave');
+            }
+
+            $("#actionModal").modal('show');
+        }
+    </script>
+}

@@ -1,0 +1,290 @@
+﻿@model TeamPulse.Models.TblCompanySettings
+@{
+    ViewData["Title"] = "Global Configuration";
+}
+
+<style>
+    :root {
+        --brand-primary: #4f46e5;
+        --brand-success: #10b981;
+    }
+
+    .settings-header {
+        background: #fff;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 1.5rem 0;
+        margin-bottom: 2rem;
+    }
+
+    /* Modern Card UI */
+    .glass-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+        background: #fff;
+    }
+
+    /* Logo Section */
+    .logo-container {
+        position: relative;
+        display: inline-block;
+        padding: 10px;
+        background: #f8fafc;
+        border: 2px dashed #e2e8f0;
+        border-radius: 24px;
+        transition: 0.3s;
+    }
+
+        .logo-container:hover {
+            border-color: var(--brand-primary);
+        }
+
+    .company-logo-img {
+        width: 140px;
+        height: 140px;
+        object-fit: contain;
+        border-radius: 18px;
+        background: #fff;
+    }
+
+    /* Tab Styling */
+    .nav-tabs-custom {
+        border: none;
+        background: #f1f5f9;
+        padding: 6px;
+        border-radius: 14px;
+        margin-bottom: 2rem;
+    }
+
+        .nav-tabs-custom .nav-link {
+            border: none;
+            border-radius: 10px;
+            color: #64748b;
+            font-weight: 600;
+            padding: 10px 20px;
+            transition: 0.3s;
+        }
+
+            .nav-tabs-custom .nav-link.active {
+                background: #fff;
+                color: var(--brand-primary);
+                box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            }
+
+    /* Form Design */
+    .form-group label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: 6px;
+    }
+
+    .form-control-modern {
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        transition: 0.3s;
+    }
+
+        .form-control-modern:focus {
+            background: #fff;
+            border-color: var(--brand-primary);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        }
+
+    .section-title {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #1e293b;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+    }
+
+        .section-title i {
+            margin-right: 10px;
+            color: var(--brand-primary);
+        }
+</style>
+
+<div class="settings-header">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="font-weight-bold text-dark mb-1">Company Profile</h2>
+                <p class="text-muted small mb-0"><i class="fas fa-cog mr-1"></i> Global system settings and legal entity details</p>
+            </div>
+            <div class="badge badge-soft-primary p-2 px-3">
+                <i class="fas fa-shield-check mr-1"></i> System Admin Access
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-custom bg-white border-left border-success shadow-sm alert-dismissible fade show mb-4">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle text-success mr-3 fa-lg"></i>
+                    <div><strong>Success!</strong><br />@TempData["Success"]</div>
+                </div>
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
+        }
+
+        <form asp-action="Update" method="post" enctype="multipart/form-data">
+            <div class="row">
+
+                <div class="col-md-4">
+                    <div class="card glass-card text-center py-5">
+                        <div class="card-body">
+                            <div class="logo-container mb-4">
+                                @if (!string.IsNullOrEmpty(Model.CompanyLogo))
+                                {
+                                    <img src="@Model.CompanyLogo" class="company-logo-img" alt="Company Logo">
+                                }
+                                else
+                                {
+                                    <img src="~/theme/dist/img/AdminLTELogo.png" class="company-logo-img" alt="Default">
+                                }
+                            </div>
+
+                            <h4 class="font-weight-bold text-dark mb-1">@Model.CompanyName</h4>
+                            <p class="text-muted small">Registered Business Identity</p>
+
+                            <div class="form-group mt-5 text-left px-3">
+                                <label>Brand Mark (Logo)</label>
+                                <div class="custom-file">
+                                    <input type="file" name="LogoFile" class="custom-file-input" id="logoUpload">
+                                    <label class="custom-file-label rounded-pill" for="logoUpload">Change Logo</label>
+                                </div>
+                                <small class="text-muted mt-2 d-block">Recommended: Square PNG, max 2MB.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-8">
+                    <div class="card glass-card h-100">
+                        <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
+                            <ul class="nav nav-tabs nav-tabs-custom" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" data-toggle="pill" href="#tab-basic">General Info</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-toggle="pill" href="#tab-address">Locality</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-toggle="pill" href="#tab-legal">Tax & Statutory</a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="card-body p-4">
+                            <div class="tab-content">
+
+                                <div class="tab-pane fade show active" id="tab-basic">
+                                    <h6 class="section-title"><i class="fas fa-id-card"></i> Entity Identification</h6>
+                                    <div class="form-group mb-4">
+                                        <label>Legal Company Name</label>
+                                        <input asp-for="CompanyName" class="form-control form-control-modern" placeholder="Official Registered Name" />
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 form-group">
+                                            <label>Corporate Email</label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend"><span class="input-group-text bg-white border-right-0"><i class="fas fa-envelope text-muted"></i></span></div>
+                                                <input asp-for="Email" class="form-control form-control-modern border-left-0" placeholder="hr@company.com" />
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 form-group">
+                                            <label>Support Phone</label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend"><span class="input-group-text bg-white border-right-0"><i class="fas fa-phone text-muted"></i></span></div>
+                                                <input asp-for="Phone" class="form-control form-control-modern border-left-0" placeholder="+91 XXXX..." />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Official Website</label>
+                                        <input asp-for="Website" class="form-control form-control-modern" placeholder="https://www.company.com" />
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane fade" id="tab-address">
+                                    <h6 class="section-title"><i class="fas fa-map-marked-alt"></i> Office Headquarters</h6>
+                                    <div class="form-group mb-4">
+                                        <label>Primary Address Line</label>
+                                        <textarea asp-for="AddressLine1" class="form-control form-control-modern" rows="2" placeholder="Suite, Building, Street..."></textarea>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 form-group">
+                                            <label>City</label>
+                                            <input asp-for="City" class="form-control form-control-modern" />
+                                        </div>
+                                        <div class="col-md-4 form-group">
+                                            <label>State / Province</label>
+                                            <input asp-for="State" class="form-control form-control-modern" />
+                                        </div>
+                                        <div class="col-md-4 form-group">
+                                            <label>Zip / Pin Code</label>
+                                            <input asp-for="PinCode" class="form-control form-control-modern" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane fade" id="tab-legal">
+                                    <h6 class="section-title"><i class="fas fa-balance-scale"></i> Compliance & Tax Identifiers</h6>
+                                    <div class="row">
+                                        <div class="col-md-6 form-group">
+                                            <label>GST Identification No.</label>
+                                            <input asp-for="GSTNo" class="form-control form-control-modern font-weight-bold" placeholder="22AAAAA0000A1Z5" />
+                                        </div>
+                                        <div class="col-md-6 form-group">
+                                            <label>Company PAN</label>
+                                            <input asp-for="PANNo" class="form-control form-control-modern font-weight-bold" placeholder="ABCDE1234F" />
+                                        </div>
+                                    </div>
+                                    <hr class="my-4 border-light">
+                                    <div class="row">
+                                        <div class="col-md-6 form-group">
+                                            <label>PF Establishment Code</label>
+                                            <input asp-for="PF_Code" class="form-control form-control-modern" />
+                                        </div>
+                                        <div class="col-md-6 form-group">
+                                            <label>ESI Registration No.</label>
+                                            <input asp-for="ESI_Code" class="form-control form-control-modern" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="card-footer bg-white border-0 p-4 text-right">
+                            <button type="submit" class="btn btn-success btn-lg rounded-pill px-5 shadow">
+                                <i class="fas fa-save mr-2"></i> Update Configuration
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="~/theme/plugins/bs-custom-file-input/bs-custom-file-input.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            bsCustomFileInput.init();
+        });
+    </script>
+}

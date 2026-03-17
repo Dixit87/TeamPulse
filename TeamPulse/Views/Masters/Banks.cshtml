@@ -1,0 +1,267 @@
+﻿@model IEnumerable<TeamPulse.ViewModels.BankVM>
+@{
+    ViewData["Title"] = "Banking Partners";
+}
+
+<style>
+    :root {
+        --bank-accent: #0f172a; /* Slate 900 */
+        --success-pill: #dcfce7;
+        --success-text: #166534;
+    }
+
+    /* Professional Header */
+    .content-header h1 {
+        font-weight: 800;
+        color: var(--bank-accent);
+        letter-spacing: -0.5px;
+    }
+
+    /* Modern Card & Table */
+    .bank-master-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 4px 25px rgba(0,0,0,0.04);
+        overflow: hidden;
+    }
+
+    .table thead th {
+        background-color: #f8fafc;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        color: #64748b;
+        border: none;
+        padding: 1.25rem;
+    }
+
+    .table td {
+        vertical-align: middle;
+        padding: 1.1rem 1.25rem;
+        border-color: #f1f5f9;
+    }
+
+    /* Action Icon Styling */
+    .btn-action-round {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        transition: 0.3s;
+        border: 1px solid #e2e8f0;
+        background: white;
+    }
+
+    .btn-edit-bank {
+        color: #4f46e5;
+    }
+
+        .btn-edit-bank:hover {
+            background: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
+        }
+
+    .btn-delete-bank {
+        color: #ef4444;
+    }
+
+        .btn-delete-bank:hover {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+
+    /* Status Pill */
+    .status-pill {
+        padding: 5px 12px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .status-active {
+        background: var(--success-pill);
+        color: var(--success-text);
+    }
+
+    .status-inactive {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    /* Modal Form UI */
+    .modal-content {
+        border: none;
+        border-radius: 24px;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid #f1f5f9;
+        padding: 1.5rem 2rem;
+    }
+
+    .form-modern-input {
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        font-weight: 500;
+    }
+
+        .form-modern-input:focus {
+            background: white;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        }
+</style>
+
+<div class="content-header py-4">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-1">Bank Directory</h1>
+                <p class="text-muted small mb-0"><i class="fas fa-university mr-1"></i> Configure active banking institutions for payroll disbursement</p>
+            </div>
+            <button type="button" class="btn btn-dark rounded-pill px-4 shadow-sm font-weight-bold" onclick="openModal(0, '')">
+                <i class="fas fa-plus-circle mr-2"></i> Register New Bank
+            </button>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-custom bg-white border-left border-success shadow-sm alert-dismissible fade show mb-4">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle text-success mr-3 fa-lg"></i>
+                    <span class="font-weight-bold">Update Successful:</span> &nbsp; @TempData["Success"]
+                </div>
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
+        }
+
+        <div class="card bank-master-card border-0">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="pl-5">Institution Name</th>
+                                <th class="text-center">Verification Status</th>
+                                <th class="text-right pr-5">Control Access</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td class="pl-5">
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-light p-2 rounded mr-3 text-secondary border">
+                                                    <i class="fas fa-landmark"></i>
+                                                </div>
+                                                <span class="font-weight-bold text-dark h6 mb-0">@item.BankName</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            @if (item.IsActive)
+                                            {
+                                                <span class="status-pill status-active">
+                                                    <i class="fas fa-shield-check mr-1 small"></i> Verified & Active
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="status-pill status-inactive">
+                                                    <i class="fas fa-ban mr-1 small"></i> Suspended
+                                                </span>
+                                            }
+                                        </td>
+                                        <td class="text-right pr-5">
+                                            <button class="btn-action-round btn-edit-bank mr-2"
+                                                    title="Modify Bank"
+                                                    onclick="openModal(@item.BankID, '@item.BankName')">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+
+                                            <a href="@Url.Action("DeleteBank", "Masters", new { id = item.BankID })"
+                                               class="btn-action-round btn-delete-bank"
+                                               title="De-register Bank"
+                                               onclick="return confirm('Deregistering this bank may affect employee payroll mappings. Continue?');">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="3" class="text-center py-5">
+                                        <div class="opacity-25 mb-3"><i class="fas fa-university fa-4x"></i></div>
+                                        <h6 class="text-muted font-weight-bold">No banking partners registered.</h6>
+                                        <p class="text-muted small">Registered banks will appear here for salary distribution.</p>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="bankModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header bg-white border-0">
+                <h5 class="modal-title font-weight-bold text-dark" id="modalTitle">Institution Configuration</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+
+            <form asp-action="SaveBank" asp-controller="Masters" method="post">
+                <div class="modal-body p-4 pt-0">
+                    <input type="hidden" name="BankID" id="hdnId" value="0" />
+
+                    <div class="form-group mb-0">
+                        <label class="small font-weight-bold text-uppercase text-muted">Legal Bank Name</label>
+                        <input type="text" name="BankName" id="txtName" class="form-control form-modern-input" required placeholder="e.g. ICICI Bank, Axis Bank" />
+                        <small class="text-muted mt-2 d-block"><i class="fas fa-info-circle mr-1"></i> Use official name as per RBI records.</small>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm font-weight-bold">Authorize & Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(id, name) {
+            $('#hdnId').val(id);
+            $('#txtName').val(name);
+
+            if (id === 0) {
+                $('#modalTitle').html('<i class="fas fa-plus-circle text-primary mr-2"></i>New Institution');
+            } else {
+                $('#modalTitle').html('<i class="fas fa-university text-primary mr-2"></i>Update Institution');
+            }
+
+            $('#bankModal').modal('show');
+        }
+    </script>
+}

@@ -1,0 +1,260 @@
+﻿@model TeamPulse.Models.TblCompanySettings
+@{
+    ViewData["Title"] = "System Architecture";
+}
+
+<style>
+    :root {
+        --settings-primary: #4f46e5;
+        --settings-bg: #f8fafc;
+    }
+
+    /* Modern Layout Styling */
+    .settings-wrapper {
+        padding: 1.5rem 0;
+    }
+
+    /* Navigation Sidebar */
+    .nav-settings {
+        border: none;
+        background: transparent;
+    }
+
+        .nav-settings .nav-link {
+            border-radius: 12px;
+            color: #64748b;
+            font-weight: 600;
+            padding: 12px 20px;
+            margin-bottom: 8px;
+            transition: 0.3s;
+            border: 1px solid transparent;
+        }
+
+            .nav-settings .nav-link.active {
+                background: #fff !important;
+                color: var(--settings-primary) !important;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+                border: 1px solid #e2e8f0;
+            }
+
+            .nav-settings .nav-link:hover:not(.active) {
+                background: #f1f5f9;
+                color: #1e293b;
+            }
+
+    /* Content Area */
+    .settings-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.03);
+        background: #fff;
+    }
+
+    .section-header {
+        padding-bottom: 1rem;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+        .section-header h4 {
+            font-weight: 800;
+            color: #1e293b;
+            font-size: 1.25rem;
+        }
+
+    /* Form Modernization */
+    .form-group label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: 8px;
+    }
+
+    .form-control-modern {
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        transition: 0.3s;
+        font-weight: 500;
+    }
+
+        .form-control-modern:focus {
+            background: #fff;
+            border-color: var(--settings-primary);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        }
+
+    .helper-text {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        margin-top: 4px;
+        display: block;
+    }
+</style>
+
+<div class="settings-wrapper">
+    <div class="container-fluid">
+        <div class="row mb-4 align-items-end">
+            <div class="col-md-6">
+                <h2 class="font-weight-bold text-dark mb-1">Global Configuration</h2>
+                <p class="text-muted small mb-0">Define organizational rules and security protocols</p>
+            </div>
+        </div>
+
+        @if (TempData["Success"] != null || TempData["PassSuccess"] != null)
+        {
+            <div class="alert alert-custom bg-white border-left border-success shadow-sm alert-dismissible fade show mb-4">
+                <i class="fas fa-check-circle text-success mr-2"></i> @(TempData["Success"] ?? TempData["PassSuccess"])
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
+        }
+        @if (TempData["PassError"] != null)
+        {
+            <div class="alert alert-custom bg-white border-left border-danger shadow-sm alert-dismissible fade show mb-4">
+                <i class="fas fa-exclamation-triangle text-danger mr-2"></i> @TempData["PassError"]
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
+        }
+
+        <div class="row">
+            <div class="col-md-3">
+                <div class="nav flex-column nav-pills nav-settings" role="tablist">
+                    <a class="nav-link active" data-toggle="pill" href="#payroll-rules" role="tab">
+                        <i class="fas fa-calculator mr-3"></i> Payroll Logic
+                    </a>
+                    <a class="nav-link" data-toggle="pill" href="#security" role="tab">
+                        <i class="fas fa-shield-alt mr-3"></i> Security & Access
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <div class="card settings-card">
+                    <div class="card-body p-4 p-lg-5">
+                        <div class="tab-content">
+
+                            <div class="tab-pane fade show active" id="payroll-rules">
+                                <div class="section-header d-flex align-items-center">
+                                    <div class="bg-soft-blue p-3 rounded-lg mr-3"><i class="fas fa-coins text-primary fa-lg"></i></div>
+                                    <div>
+                                        <h4 class="mb-0">Payroll & Statutory Configuration</h4>
+                                        <p class="text-muted small mb-0">Set default contribution percentages for salary processing</p>
+                                    </div>
+                                </div>
+
+                                <form asp-action="UpdateRules" method="post">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-4">
+                                            <div class="form-group">
+                                                <label>PF Employee Contribution (%)</label>
+                                                <input asp-for="PfEmployeeShare" class="form-control form-control-modern" type="number" step="0.01" />
+                                                <span class="helper-text">Standard employee deduction (Default: 12%)</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-4">
+                                            <div class="form-group">
+                                                <label>PF Employer Contribution (%)</label>
+                                                <input asp-for="PfEmployerShare" class="form-control form-control-modern" type="number" step="0.01" />
+                                                <span class="helper-text">Company share for EPF/EPS</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-4">
+                                            <div class="form-group">
+                                                <label>ESI Employee Share (%)</label>
+                                                <input asp-for="EsiEmployeeShare" class="form-control form-control-modern" type="number" step="0.01" />
+                                                <span class="helper-text">Healthcare deduction (Default: 0.75%)</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-4">
+                                            <div class="form-group">
+                                                <label>ESI Employer Share (%)</label>
+                                                <input asp-for="EsiEmployerShare" class="form-control form-control-modern" type="number" step="0.01" />
+                                                <span class="helper-text">Company medical contribution (Default: 3.25%)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="section-header mt-3 d-flex align-items-center">
+                                        <div class="bg-soft-orange p-3 rounded-lg mr-3"><i class="fas fa-user-clock text-warning fa-lg"></i></div>
+                                        <div>
+                                            <h4 class="mb-0">Policy & Calculation</h4>
+                                            <p class="text-muted small mb-0">Define how attendance impacts salary days</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6 mb-4">
+                                            <div class="form-group">
+                                                <label>Attendance Grace Window (Mins)</label>
+                                                <div class="input-group">
+                                                    <input asp-for="LateMarkGracePeriod" class="form-control form-control-modern border-right-0" type="number" />
+                                                    <div class="input-group-append">
+                                                        <span class="input-group-text bg-light border-left-0" style="border-radius: 0 10px 10px 0;">Mins</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-4">
+                                            <div class="form-group">
+                                                <label>Salary Basis</label>
+                                                <select asp-for="SalaryDaysCalculation" class="form-control form-control-modern custom-select">
+                                                    <option value="Calendar Days">Actual Month Days (28-31)</option>
+                                                    <option value="Fixed 30">Fixed Standard (30 Days)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="text-right mt-4">
+                                        <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm">
+                                            Update System Rules
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div class="tab-pane fade" id="security">
+                                <div class="section-header d-flex align-items-center">
+                                    <div class="bg-soft-red p-3 rounded-lg mr-3"><i class="fas fa-fingerprint text-danger fa-lg"></i></div>
+                                    <div>
+                                        <h4 class="mb-0">Authentication Security</h4>
+                                        <p class="text-muted small mb-0">Manage administrative credentials</p>
+                                    </div>
+                                </div>
+
+                                <form asp-action="ChangePassword" method="post">
+                                    <div class="row justify-content-start">
+                                        <div class="col-md-8">
+                                            <div class="form-group mb-4">
+                                                <label>Verify Current Password</label>
+                                                <input type="password" name="CurrentPassword" class="form-control form-control-modern" required>
+                                            </div>
+                                            <div class="form-group mb-4">
+                                                <label>New Administrative Password</label>
+                                                <input type="password" name="NewPassword" class="form-control form-control-modern" required>
+                                            </div>
+                                            <div class="form-group mb-4">
+                                                <label>Confirm New Password</label>
+                                                <input type="password" name="ConfirmPassword" class="form-control form-control-modern" required>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="text-right mt-4 border-top pt-4">
+                                        <button type="submit" class="btn btn-danger btn-lg rounded-pill px-5 shadow-sm">
+                                            Change System Password
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,316 @@
+﻿@{
+    Layout = "~/Views/Shared/_EmployeeLayout.cshtml";
+    ViewData["Title"] = "My Attendance Log";
+
+    int currentMonth = ViewBag.TargetMonth;
+    int currentYear = ViewBag.TargetYear;
+    string monthName = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(currentMonth);
+
+   
+    var todayDate = DateOnly.FromDateTime(DateTime.Today);
+}
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap4.min.css">
+
+<style>
+    :root {
+        --dash-primary: #4361ee;
+        --dash-success: #2ec4b6;
+        --dash-warning: #ff9f1c;
+        --dash-danger: #e71d36;
+        --dash-info: #4cc9f0;
+        --bg-soft: #f8f9fc;
+    }
+
+    body {
+        background-color: var(--bg-soft);
+        font-family: 'Inter', sans-serif;
+    }
+
+    .stat-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        transition: transform 0.2s ease;
+        background: #fff;
+    }
+
+    .icon-box {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .table-custom {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        padding: 20px;
+    }
+
+        .table-custom thead th {
+            background-color: #f8f9fc;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .table-custom tbody td {
+            vertical-align: middle;
+            color: #334155;
+            font-weight: 500;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+    /* Highlight Today's Row */
+    .row-today {
+        background-color: rgba(67, 97, 238, 0.05) !important;
+        border-left: 4px solid var(--dash-primary);
+    }
+
+    .badge-custom {
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    .filter-card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+    }
+
+    /* Pagination Styling */
+    .page-item.active .page-link {
+        background-color: var(--dash-primary);
+        border-color: var(--dash-primary);
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h2 class="font-weight-bold text-dark mb-1">Attendance Log</h2>
+            <p class="text-muted mb-0">Track your daily punches and working hours for <strong class="text-primary">@monthName @currentYear</strong></p>
+        </div>
+        <div class="col-md-6 text-md-right mt-3 mt-md-0">
+            <form method="get" asp-action="MyAttendance" asp-controller="EmployeePortal" class="d-inline-flex align-items-center filter-card p-2 shadow-sm">
+                <select name="month" class="form-control border-0 bg-light mr-2 font-weight-bold" style="border-radius: 8px; cursor:pointer;">
+                    @for (int i = 1; i <= 12; i++)
+                    {
+                        string mName = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(i);
+                        if (i == currentMonth)
+                        {
+                            <option value="@i" selected>@mName</option>
+                        }
+                        else
+                        {
+                            <option value="@i">@mName</option>
+                        }
+                    }
+                </select>
+                <select name="year" class="form-control border-0 bg-light mr-2 font-weight-bold" style="border-radius: 8px; cursor:pointer;">
+                    @for (int y = DateTime.Now.Year - 2; y <= DateTime.Now.Year; y++)
+                    {
+                        if (y == currentYear)
+                        {
+                            <option value="@y" selected>@y</option>
+                        }
+                        else
+                        {
+                            <option value="@y">@y</option>
+                        }
+                    }
+                </select>
+                <button type="submit" class="btn btn-primary font-weight-bold px-4" style="border-radius: 8px;">View</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card p-3 d-flex align-items-center">
+                <div class="icon-box mr-3" style="background-color: rgba(46, 196, 182, 0.1); color: var(--dash-success);">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div>
+                    <h3 class="font-weight-bold mb-0 text-dark">@ViewBag.PresentCount</h3>
+                    <small class="text-muted font-weight-bold text-uppercase">Days Present</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card p-3 d-flex align-items-center">
+                <div class="icon-box mr-3" style="background-color: rgba(231, 29, 54, 0.1); color: var(--dash-danger);">
+                    <i class="fas fa-user-times"></i>
+                </div>
+                <div>
+                    <h3 class="font-weight-bold mb-0 text-dark">@ViewBag.AbsentCount</h3>
+                    <small class="text-muted font-weight-bold text-uppercase">Days Absent</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card p-3 d-flex align-items-center">
+                <div class="icon-box mr-3" style="background-color: rgba(255, 159, 28, 0.1); color: var(--dash-warning);">
+                    <i class="fas fa-umbrella-beach"></i>
+                </div>
+                <div>
+                    <h3 class="font-weight-bold mb-0 text-dark">@ViewBag.LeaveCount</h3>
+                    <small class="text-muted font-weight-bold text-uppercase">Approved Leaves</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card p-3 d-flex align-items-center">
+                <div class="icon-box mr-3" style="background-color: rgba(76, 201, 240, 0.1); color: var(--dash-info);">
+                    <i class="fas fa-gifts"></i>
+                </div>
+                <div>
+                    <h3 class="font-weight-bold mb-0 text-dark">@ViewBag.HolidayCount</h3>
+                    <small class="text-muted font-weight-bold text-uppercase">Public Holidays</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-custom">
+        <div class="table-responsive">
+            <table id="attendanceTable" class="table table-hover w-100">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Day</th>
+                        <th>Punch In</th>
+                        <th>Punch Out</th>
+                        <th>Effective Hours</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (ViewBag.DailyRecords != null)
+                    {
+                        foreach (var record in ViewBag.DailyRecords)
+                        {
+                            // Highlight current date logic
+                            string rowClass = (record.Date == todayDate) ? "row-today" : "";
+
+                            <tr class="@rowClass">
+                                <td class="font-weight-bold">
+                                    <i class="far fa-calendar-alt text-muted mr-2"></i> @record.Date.ToString("dd MMM yyyy")
+                                    @if (record.Date == todayDate)
+                                    {
+                                        <span class="badge badge-primary ml-2">Today</span>
+                                    }
+                                </td>
+                                <td>@record.DayName</td>
+
+                                <td>
+                                    @if (record.InTime != null)
+                                    {
+                                        <span class="text-dark"><i class="fas fa-sign-in-alt text-success mr-1"></i> @record.InTime.ToString("hh:mm tt")</span>
+                                    }
+                                    else
+                                    {
+
+                                        <span class="text-muted">--:--</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    @if (record.OutTime != null)
+                                    {
+                                        <span class="text-dark"><i class="fas fa-sign-out-alt text-warning mr-1"></i> @record.OutTime.ToString("hh:mm tt")</span>
+                                    }
+                                    else
+                                    {
+
+                                        <span class="text-muted">--:--</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    <span class="badge badge-light border px-2 py-1 text-dark"><i class="far fa-clock mr-1 text-primary"></i> @record.WorkHours</span>
+                                </td>
+
+                                <td>
+                                    @if (record.Status == "Present")
+                                    {
+                                        <span class="badge badge-custom badge-success bg-success"><i class="fas fa-check-circle mr-1"></i> Present</span>
+                                    }
+                                    else if (record.Status == "Absent")
+                                    {
+                                        <span class="badge badge-custom badge-danger bg-danger"><i class="fas fa-times-circle mr-1"></i> Absent</span>
+                                    }
+                                    else if (record.Status == "Weekend")
+                                    {
+                                        <span class="badge badge-custom badge-secondary bg-secondary"><i class="fas fa-couch mr-1"></i> Weekend</span>
+                                    }
+                                    else if (record.Status == "Holiday")
+                                    {
+                                        <span class="badge badge-custom badge-info bg-info"><i class="fas fa-star mr-1"></i> Holiday</span>
+                                    }
+                                    else if (record.Status == "Leave")
+                                    {
+                                        <span class="badge badge-custom badge-warning bg-warning text-white"><i class="fas fa-plane mr-1"></i> Leave</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap4.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('#attendanceTable').DataTable({
+                "pageLength": 10, // Ek page pe 10 record dikhenge
+                "lengthChange": false, // Dropdown chhupaya hai clean look ke liye
+                "ordering": false, // Humne controller me already sort kiya hua hai
+                "info": true,
+                "dom": '<"row"<"col-md-6"B><"col-md-6"f>>rt<"row"<"col-md-6"i><"col-md-6"p>>',
+                "buttons": [
+                    {
+                        extend: 'excelHtml5',
+                        text: '<i class="fas fa-file-excel mr-1"></i> Export Excel',
+                        className: 'btn btn-sm btn-success rounded font-weight-bold mb-3'
+                    },
+                    {
+                        extend: 'pdfHtml5',
+                        text: '<i class="fas fa-file-pdf mr-1"></i> Export PDF',
+                        className: 'btn btn-sm btn-danger rounded font-weight-bold mb-3 ml-2'
+                    }
+                ],
+                "language": {
+                    "search": "",
+                    "searchPlaceholder": "Search records..."
+                }
+            });
+
+            // Search box ki styling thik karne ke liye
+            $('.dataTables_filter input').addClass('form-control form-control-sm').css({'border-radius':'8px', 'display':'inline-block', 'width':'auto'});
+        });
+    </script>
+}

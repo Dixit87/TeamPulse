@@ -1,0 +1,278 @@
+﻿@model IEnumerable<TeamPulse.Models.TblUser>
+@{
+    ViewData["Title"] = "Access Management";
+}
+
+<style>
+    :root {
+        --user-primary: #4f46e5;
+        --bg-light: #f8fafc;
+    }
+
+    /* Page Header Overhaul */
+    .user-header {
+        background: #fff;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 1.5rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .btn-create-user {
+        border-radius: 12px;
+        font-weight: 600;
+        padding: 10px 24px;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+        transition: 0.3s;
+    }
+
+        .btn-create-user:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(79, 70, 229, 0.3);
+        }
+
+    /* Modern Table UI */
+    .user-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.03);
+        overflow: hidden;
+    }
+
+    .table-user thead th {
+        background: #f1f5f9;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        letter-spacing: 0.1em;
+        color: #475569;
+        border: none;
+        padding: 1.25rem 1rem;
+    }
+
+    .table-user tbody tr {
+        transition: 0.2s;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+        .table-user tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+    /* Avatar UI */
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: #eef2ff;
+        color: #4338ca;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+        margin-right: 12px;
+        border: 1px solid #e0e7ff;
+    }
+
+    /* Role Badges */
+    .badge-role {
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .role-admin {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .role-standard {
+        background: #e0f2fe;
+        color: #0369a1;
+    }
+
+    /* Action Buttons */
+    .btn-action-soft {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        transition: 0.3s;
+    }
+
+    .btn-key {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .btn-status-active {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .btn-status-inactive {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    /* Modal Styling */
+    .modal-content {
+        border-radius: 24px;
+        border: none;
+    }
+
+    .form-control-modern {
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        padding: 0.75rem;
+        background: #f8fafc;
+    }
+</style>
+
+<div class="user-header">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="font-weight-bold text-dark mb-1">Users & Permissions</h2>
+                <p class="text-muted small mb-0"><i class="fas fa-user-shield mr-1 text-primary"></i> Control system access and administrative privileges</p>
+            </div>
+            <a href="@Url.Action("Create")" class="btn btn-primary btn-create-user">
+                <i class="fas fa-user-plus mr-2"></i> Provision New User
+            </a>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-custom bg-white border-left border-success shadow-sm alert-dismissible fade show mb-4">
+                <i class="fas fa-check-circle text-success mr-2"></i> @TempData["Success"]
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
+        }
+
+        <div class="card user-card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-user mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th class="pl-4">Identity</th>
+                                <th>Authorized Email</th>
+                                <th>Access Role</th>
+                                <th class="text-center">Account Status</th>
+                                <th class="text-right pr-4">Security Controls</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="pl-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="user-avatar shadow-sm">
+                                                @(item.FullName?[0])
+                                            </div>
+                                            <div>
+                                                <div class="font-weight-bold text-dark">@item.FullName</div>
+                                                <small class="text-muted">UID: #@item.UserID</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted font-weight-bold">@item.Email</span>
+                                    </td>
+                                    <td>
+                                        @{
+                                            var roleClass = item.RoleID == 1 ? "role-admin" : "role-standard";
+                                            var roleIcon = item.RoleID == 1 ? "fa-crown" : "fa-user-tag";
+                                        }
+                                        <span class="badge-role @roleClass border">
+                                            <i class="fas @roleIcon mr-1"></i> @(item.Role?.RoleName ?? "Standard User")
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        @if (item.IsActive)
+                                        {
+                                            <span class="badge badge-pill badge-success px-3 py-1" style="font-size: 10px;">
+                                                <i class="fas fa-check mr-1"></i> ENABLED
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-pill badge-secondary px-3 py-1" style="font-size: 10px;">
+                                                <i class="fas fa-lock mr-1"></i> RESTRICTED
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="text-right pr-4">
+                                        <a href="@Url.Action("ToggleStatus", new { id = item.UserID })"
+                                           class="btn-action-soft @(item.IsActive ? "btn-status-active" : "btn-status-inactive") mr-2 shadow-sm"
+                                           title="@(item.IsActive ? "Suspend User" : "Restore User")">
+                                            <i class="fas @(item.IsActive ? "fa-user-slash" : "fa-user-check")"></i>
+                                        </a>
+
+                                        <button class="btn-action-soft btn-key shadow-sm"
+                                                onclick="openResetModal(@item.UserID, '@item.FullName')"
+                                                title="Re-provision Password">
+                                            <i class="fas fa-fingerprint"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="resetModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header border-0 p-4">
+                <h5 class="modal-title font-weight-bold text-dark">Password Re-provisioning</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <form asp-action="ResetPassword" method="post">
+                <div class="modal-body p-4 pt-0">
+                    <input type="hidden" name="userId" id="resetUserId" />
+
+                    <div class="p-3 bg-light rounded-lg mb-4 border">
+                        <small class="text-muted text-uppercase font-weight-bold d-block mb-1">Target Account</small>
+                        <h6 class="font-weight-bold text-primary mb-0" id="resetUserName"></h6>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="small font-weight-bold text-muted text-uppercase">New Access Key</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend"><span class="input-group-text bg-white border-right-0"><i class="fas fa-key text-muted"></i></span></div>
+                            <input type="text" name="newPassword" class="form-control form-control-modern border-left-0" placeholder="Min 8 characters..." required />
+                        </div>
+                        <p class="small text-muted mt-2 mb-0"><i class="fas fa-info-circle mr-1"></i> User will be required to change this upon next login.</p>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning rounded-pill px-4 shadow font-weight-bold">Apply Reset</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openResetModal(id, name) {
+        document.getElementById('resetUserId').value = id;
+        document.getElementById('resetUserName').innerText = name;
+        $('#resetModal').modal('show');
+    }
+</script>

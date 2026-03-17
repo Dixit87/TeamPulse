@@ -1,0 +1,224 @@
+﻿@{
+    ViewData["Title"] = "Data Exports & Reports";
+    var months = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.MonthNames.Take(12).ToList();
+}
+
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+        --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+
+    .report-header {
+        background: white;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .report-card {
+        border: none;
+        border-radius: 20px;
+        transition: all 0.3s ease;
+        background: #fff;
+        overflow: hidden;
+    }
+
+        .report-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+    .icon-wrapper {
+        width: 70px;
+        height: 70px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 1.8rem;
+    }
+
+    .bg-soft-primary {
+        background: #eef2ff;
+        color: #4f46e5;
+    }
+
+    .bg-soft-warning {
+        background: #fffbeb;
+        color: #d97706;
+    }
+
+    .bg-soft-success {
+        background: #ecfdf5;
+        color: #059669;
+    }
+
+    .form-control-custom {
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        padding: 0.6rem;
+        font-size: 0.9rem;
+        background: #f8fafc;
+    }
+
+    .btn-export {
+        border-radius: 12px;
+        padding: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        border: none;
+        transition: 0.3s;
+    }
+
+        .btn-export:active {
+            transform: scale(0.95);
+        }
+
+    .card-footer-info {
+        background: #f8fafc;
+        border-top: 1px solid #f1f5f9;
+        padding: 1rem;
+        font-size: 0.8rem;
+    }
+</style>
+
+<div class="report-header">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="font-weight-bold text-dark mb-1">Intelligence Center</h2>
+                <p class="text-muted mb-0">Generate and export organizational data for audits and accounting.</p>
+            </div>
+            <div class="col-md-4 text-right">
+                <span class="badge badge-light border px-3 py-2 rounded-pill">
+                    <i class="fas fa-clock text-primary mr-1"></i> Last sync: Just now
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card report-card shadow-sm h-100">
+                    <div class="card-body p-4 text-center">
+                        <div class="icon-wrapper bg-soft-primary">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <h5 class="font-weight-bold">Payroll Register</h5>
+                        <p class="small text-muted mb-4">Detailed monthly CTC breakup, earnings, and statutory deductions.</p>
+
+                        <form asp-action="ExportSalary" method="get">
+                            <div class="row no-gutters mb-3">
+                                <div class="col-7 pr-1">
+                                    <select name="month" class="form-control form-control-custom">
+                                        @for (int i = 0; i < 12; i++)
+                                        {
+                                            <option value="@(i + 1)" selected="@(DateTime.Now.Month == i + 1)">@months[i]</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-5 pl-1">
+                                    <select name="year" class="form-control form-control-custom">
+                                        <option value="2025">2025</option>
+                                        <option value="2026" selected>2026</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block btn-export shadow-sm">
+                                <i class="fas fa-cloud-download-alt mr-2"></i> Export CSV
+                            </button>
+                        </form>
+                    </div>
+                    <div class="card-footer-info text-center text-primary font-weight-bold">
+                        <i class="fas fa-shield-alt mr-1"></i> Audit-Ready Document
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card report-card shadow-sm h-100">
+                    <div class="card-body p-4 text-center">
+                        <div class="icon-wrapper bg-soft-warning">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <h5 class="font-weight-bold">Expense Statement</h5>
+                        <p class="small text-muted mb-4">Summary of office maintenance, food, travel, and miscellaneous bills.</p>
+
+                        <form asp-action="ExportExpense" method="get">
+                            <div class="row no-gutters mb-3">
+                                <div class="col-7 pr-1">
+                                    <select name="month" class="form-control form-control-custom">
+                                        @for (int i = 0; i < 12; i++)
+                                        {
+                                            <option value="@(i + 1)" selected="@(DateTime.Now.Month == i + 1)">@months[i]</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-5 pl-1">
+                                    <select name="year" class="form-control form-control-custom">
+                                        <option value="2025">2025</option>
+                                        <option value="2026" selected>2026</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-warning btn-block btn-export shadow-sm text-white">
+                                <i class="fas fa-file-excel mr-2"></i> Download Report
+                            </button>
+                        </form>
+                    </div>
+                    <div class="card-footer-info text-center text-warning font-weight-bold">
+                        <i class="fas fa-chart-pie mr-1"></i> Financial Summary
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card report-card shadow-sm h-100">
+                    <div class="card-body p-4 text-center d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="icon-wrapper bg-soft-success">
+                                <i class="fas fa-user-shield"></i>
+                            </div>
+                            <h5 class="font-weight-bold">Employee Master Data</h5>
+                            <p class="small text-muted mb-4">KYC, Bank details, and employment history of the entire workforce.</p>
+
+                            <div class="alert bg-light border-0 small text-muted text-left mb-4">
+                                <i class="fas fa-info-circle text-success mr-2"></i>
+                                Includes active, on-bench, and notice-period employees.
+                            </div>
+                        </div>
+
+                        <a href="@Url.Action("ExportEmployees")" class="btn btn-success btn-block btn-export shadow-sm">
+                            <i class="fas fa-users-cog mr-2"></i> Generate Master List
+                        </a>
+                    </div>
+                    <div class="card-footer-info text-center text-success font-weight-bold">
+                        <i class="fas fa-database mr-1"></i> Full Database Export
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="card mt-2 border-0 shadow-sm bg-dark text-white" style="border-radius: 20px;">
+            <div class="card-body p-4">
+                <div class="row align-items-center text-center text-md-left">
+                    <div class="col-md-8">
+                        <h5 class="mb-1 font-weight-bold text-warning">Custom Reports Required?</h5>
+                        <p class="small mb-md-0 opacity-75">If you need cross-functional reports or annual tax summaries, please contact the IT support team.</p>
+                    </div>
+                    <div class="col-md-4 text-md-right">
+                        <button class="btn btn-outline-warning rounded-pill px-4">Request Access</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
