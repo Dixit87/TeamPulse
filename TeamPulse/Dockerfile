@@ -1,22 +1,17 @@
 # 1. SDK Image use karenge build ke liye
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
+WORKDIR /app
 
-# Project file copy karke restore karenge
-COPY ["TeamPulse.csproj", "./"]
-RUN dotnet restore "./TeamPulse.csproj"
-
-# Baaki saara code copy karke build karenge
+# Saara code pehle hi copy kar lenge taaki koi path ka issue na rahe
 COPY . .
-RUN dotnet build "TeamPulse.csproj" -c Release -o /app/build
+RUN dotnet restore
 
-# Publish karenge
-FROM build AS publish
-RUN dotnet publish "TeamPulse.csproj" -c Release -o /app/publish /p:UseAppHost=false
+# Project ko release mode me build aur publish karenge
+RUN dotnet publish -c Release -o /app/out
 
 # 2. Runtime image taiyar karenge final run ke liye
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
+COPY --from=build /app/out .
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "TeamPulse.dll"]
