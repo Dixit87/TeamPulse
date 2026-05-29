@@ -47,7 +47,12 @@ public partial class TeamPulseDbContext : DbContext
 
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseSqlServer("Server=JAY_DWARKADHISH\\SQLEXPRESS02;Database=TeamPulseDB;Trusted_Connection=True;TrustServerCertificate=True;");
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            optionsBuilder.UseSqlServer("Server=JAY_DWARKADHISH\\SQLEXPRESS02;Database=TeamPulseDB;Trusted_Connection=True;TrustServerCertificate=True;");
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
