@@ -50,6 +50,20 @@ public partial class TeamPulseDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+
+        // 1. OnModelCreating ke andar baki tables ke sath ise bhi daal dijiye
+        modelBuilder.Entity<TblUser>(entity =>
+        {
+            entity.HasKey(e => e.UserID);
+            entity.ToTable("tbl_Users"); // 👈 Yeh line compiler ko batayegi ki database me exact table ka naam kya hai
+
+            entity.Property(e => e.UserID).HasColumnName("UserID");
+            entity.Property(e => e.FullName).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.Password).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.Email).HasMaxLength(100);
+            entity.Property(e => e.RoleID).HasColumnName("EmployeeID");
+        });
+
         modelBuilder.Entity<TblAsset>(entity =>
         {
             entity.HasKey(e => e.AssetId).HasName("PK__tbl_Asse__434923726B2AB479");
