@@ -1,17 +1,19 @@
-# 1. SDK Image use karenge build ke liye
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /app
+# 1. Build ke liye .NET 10.0 SDK use karenge
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
 
-# Saara code pehle hi copy kar lenge taaki koi path ka issue na rahe
+# Saari files ko copy karenge
 COPY . .
-RUN dotnet restore
 
-# Project ko release mode me build aur publish karenge
-RUN dotnet publish -c Release -o /app/out
+# TeamPulse project ko target karke restore karenge
+RUN dotnet restore "TeamPulse/TeamPulse.csproj"
 
-# 2. Runtime image taiyar karenge final run ke liye
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+# Project ko Release mode me publish karenge
+RUN dotnet publish "TeamPulse/TeamPulse.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# 2. Runtime ke liye .NET 10.0 ASP.NET image use karenge
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
-COPY --from=build /app/out .
+COPY --from=build /app/publish .
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "TeamPulse.dll"]
