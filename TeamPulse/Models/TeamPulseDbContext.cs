@@ -19,7 +19,7 @@ public partial class TeamPulseDbContext : DbContext
     public virtual DbSet<TblAsset> TblAssets { get; set; }
     public virtual DbSet<TblAssetIssue> TblAssetIssues { get; set; }
     public virtual DbSet<TblAttendance> TblAttendances { get; set; }
-    public virtual DbSet<TblCompanySettings> TblCompanySettings { get; set; } // ✅ Fixed Table
+    public virtual DbSet<TblCompanySettings> TblCompanySettings { get; set; }
     public virtual DbSet<TblDepartment> TblDepartments { get; set; }
     public virtual DbSet<TblDesignation> TblDesignations { get; set; }
     public virtual DbSet<TblEmployee> TblEmployees { get; set; }
@@ -37,27 +37,19 @@ public partial class TeamPulseDbContext : DbContext
     public virtual DbSet<TblBank> TblBanks { get; set; }
     public virtual DbSet<TblExpense> TblExpenses { get; set; }
     public virtual DbSet<TblNotice> TblNotices { get; set; }
-
     public virtual DbSet<TblTicket> TblTickets { get; set; }
-
     public virtual DbSet<TblResignation> TblResignations { get; set; }
     public virtual DbSet<TblSalaryHistory> TblSalaryHistories { get; set; }
     public virtual DbSet<TblLoanRepayment> TblLoanRepayments { get; set; }
 
-
-
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        if (!optionsBuilder.IsConfigured)
-        {
-            optionsBuilder.UseSqlServer("Server=JAY_DWARKADHISH\\SQLEXPRESS02;Database=TeamPulseDB;Trusted_Connection=True;TrustServerCertificate=True;");
-        }
+        // ✅ FIXED: SQL Server hardcoded configurations removed completely.
+        // It will now safely look for UseNpgsql registered in Program.cs
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // ... (Other Tables remain same) ...
-
         modelBuilder.Entity<TblAsset>(entity =>
         {
             entity.HasKey(e => e.AssetId).HasName("PK__tbl_Asse__434923726B2AB479");
@@ -86,7 +78,6 @@ public partial class TeamPulseDbContext : DbContext
                 .HasForeignKey(d => d.EmployeeId).HasConstraintName("FK__tbl_Atten__Emplo__787EE5A0");
         });
 
-        // ✅ FIXED COMPANY SETTINGS MAPPING
         modelBuilder.Entity<TblCompanySettings>(entity =>
         {
             entity.HasKey(e => e.CompanyID);
@@ -95,7 +86,6 @@ public partial class TeamPulseDbContext : DbContext
             entity.Property(e => e.CompanyID).HasColumnName("CompanyID");
             entity.Property(e => e.CompanyName).HasMaxLength(100).IsRequired();
 
-            // Optional Fields (IsRequired(false) lagaya taaki NULL error na aaye)
             entity.Property(e => e.ContactPerson).HasMaxLength(100).IsRequired(false);
             entity.Property(e => e.Email).HasMaxLength(100).IsRequired(false);
             entity.Property(e => e.Phone).HasMaxLength(20).IsRequired(false);
@@ -107,22 +97,18 @@ public partial class TeamPulseDbContext : DbContext
             entity.Property(e => e.State).HasMaxLength(50).IsRequired(false);
             entity.Property(e => e.PinCode).HasMaxLength(10).IsRequired(false);
 
-            // Statutory Info
             entity.Property(e => e.GSTNo).HasMaxLength(50).HasColumnName("GSTNo").IsRequired(false);
             entity.Property(e => e.PANNo).HasMaxLength(50).HasColumnName("PANNo").IsRequired(false);
-            entity.Property(e => e.TANNo).HasMaxLength(50).HasColumnName("TANNo").IsRequired(false); // ✅ Added Properly
+            entity.Property(e => e.TANNo).HasMaxLength(50).HasColumnName("TANNo").IsRequired(false);
             entity.Property(e => e.PF_Code).HasMaxLength(50).HasColumnName("PF_Code").IsRequired(false);
             entity.Property(e => e.ESI_Code).HasMaxLength(50).HasColumnName("ESI_Code").IsRequired(false);
 
             entity.Property(e => e.CompanyLogo).HasMaxLength(200).IsRequired(false);
 
-            // ✅ CRITICAL FIX: LastUpdated Nullable configuration
             entity.Property(e => e.LastUpdated)
                 .HasColumnType("datetime")
-                .IsRequired(false); // Ye line sabse zaroori hai
+                .IsRequired(false);
         });
-
-        // ... (Rest of the tables remain exactly same as your code) ...
 
         modelBuilder.Entity<TblDepartment>(entity =>
         {
@@ -157,7 +143,7 @@ public partial class TeamPulseDbContext : DbContext
             entity.Property(e => e.AccountNumber).HasMaxLength(50).IsUnicode(false);
             entity.Property(e => e.BankName).HasMaxLength(100).IsUnicode(false);
             entity.Property(e => e.BloodGroup).HasMaxLength(5).IsUnicode(false);
-            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(current_timestamp)").HasColumnType("datetime");
             entity.Property(e => e.CurrentAddress).HasMaxLength(500);
             entity.Property(e => e.DepartmentId).HasColumnName("DepartmentID");
             entity.Property(e => e.DesignationId).HasColumnName("DesignationID");
@@ -195,7 +181,7 @@ public partial class TeamPulseDbContext : DbContext
             entity.Property(e => e.DocumentName).HasMaxLength(100).IsUnicode(false);
             entity.Property(e => e.EmployeeId).HasColumnName("EmployeeID");
             entity.Property(e => e.FilePath).HasMaxLength(250);
-            entity.Property(e => e.UploadedDate).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+            entity.Property(e => e.UploadedDate).HasDefaultValueSql("(current_timestamp)").HasColumnType("datetime");
             entity.HasOne(d => d.Employee).WithMany(p => p.TblEmployeeDocuments).HasForeignKey(d => d.EmployeeId).HasConstraintName("FK__tbl_Emplo__Emplo__6754599E");
         });
 
@@ -214,7 +200,7 @@ public partial class TeamPulseDbContext : DbContext
             entity.ToTable("tbl_LeaveRequests");
             entity.Property(e => e.LeaveRequestId).HasColumnName("LeaveRequestID");
             entity.Property(e => e.AdminRemarks).HasMaxLength(250);
-            entity.Property(e => e.AppliedDate).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+            entity.Property(e => e.AppliedDate).HasDefaultValueSql("(current_timestamp)").HasColumnType("datetime");
             entity.Property(e => e.EmployeeId).HasColumnName("EmployeeID");
             entity.Property(e => e.LeaveTypeId).HasColumnName("LeaveTypeID");
             entity.Property(e => e.Reason).HasMaxLength(250);
@@ -301,7 +287,7 @@ public partial class TeamPulseDbContext : DbContext
             entity.Property(e => e.PfEmployeeShare).HasDefaultValue(0m).HasColumnType("decimal(18, 2)").HasColumnName("PF_EmployeeShare");
             entity.Property(e => e.ProfessionalTax).HasDefaultValue(0m).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.SpecialAllowance).HasDefaultValue(0m).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.UpdatedDate).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+            entity.Property(e => e.UpdatedDate).HasDefaultValueSql("(current_timestamp)").HasColumnType("datetime");
             entity.HasOne(d => d.Employee).WithOne(p => p.TblSalaryStructure).HasForeignKey<TblSalaryStructure>(d => d.EmployeeId).HasConstraintName("FK__tbl_Salar__Emplo__6C190EBB");
         });
 
@@ -315,16 +301,11 @@ public partial class TeamPulseDbContext : DbContext
             entity.Property(e => e.ShiftName).HasMaxLength(50).IsUnicode(false);
         });
 
-        OnModelCreatingPartial(modelBuilder);
-
-        {
-            modelBuilder.Entity<TblSalaryHistory>().ToTable("tbl_SalaryHistory");
-        }
+        // ✅ FIXED: Unified mappings for custom historical tracking tables
+        modelBuilder.Entity<TblSalaryHistory>().ToTable("tbl_SalaryHistory");
+        modelBuilder.Entity<TblLoanRepayment>().ToTable("tbl_LoanRepayments");
 
         OnModelCreatingPartial(modelBuilder);
-            {
-            modelBuilder.Entity<TblLoanRepayment>().ToTable("tbl_LoanRepayments");
-        }
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
