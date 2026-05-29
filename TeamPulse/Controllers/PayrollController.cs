@@ -450,12 +450,12 @@ namespace TeamPulse.Controllers
                 decimal netSalary = totalGrossEarned - totalDeduction;
 
                 // --- D. SAVE PAYROLL ---
-                var payroll = new TblPayrollProcessing
-                {
+                var payroll = new TblPayrollProcessing 
+                { 
                     EmployeeId = emp.EmployeeId,
                     Month = month,
                     Year = year,
-                    TotalDays = daysInMonth,
+                    TotalDays = daysInMonth, 
                     PresentDays = payableDays,
                     BasicEarned = earnedBasic,
                     HraEarned = earnedHRA,
